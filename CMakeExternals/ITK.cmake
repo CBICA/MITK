@@ -31,6 +31,22 @@ if(NOT DEFINED ITK_DIR)
         )
   endif()
 
+  if(MITK_USE_VTK)
+    list(APPEND additional_cmake_args
+         -DModule_ITKVtkGlue:BOOL=ON
+         -DVTK_DIR:PATH=${VTK_DIR}
+        )
+  endif()
+
+  if(MITK_USE_DCMTK)
+    list(APPEND additional_cmake_args
+        -DModule_ITKDCMTK:BOOL=ON
+        -DModule_ITKIODCMTK:BOOL=ON
+         -DDCMTK_USE_ICU:BOOL=OFF
+         -DDCMTK_DIR:PATH=${DCMTK_DIR}
+        )
+  endif()
+
   # Keep the behaviour of ITK 4.3 which by default turned on ITK Review
   # see MITK bug #17338
   list(APPEND additional_cmake_args
@@ -58,6 +74,16 @@ if(NOT DEFINED ITK_DIR)
        -DGDCM_DIR:PATH=${GDCM_DIR}
        -DITK_USE_SYSTEM_HDF5:BOOL=ON
        -DHDF5_DIR:PATH=${HDF5_DIR}
+       -DModule_ITKReview:BOOL=ON
+       -DModule_LesionSizingToolkit:BOOL=ON
+       -DModule_SkullStrip:BOOL=ON
+       -DModule_TextureFeatures:BOOL=ON
+       -DModule_RLEImage:BOOL=ON
+       -DModule_IsotropicWavelets:BOOL=ON
+       -DModule_PrincipalComponentsAnalysis:BOOL=ON
+       -DModule_MGHIO:BOOL=ON
+       -DVCL_INCLUDE_CXX_0X:BOOL=ON
+       -DVCL_INCLUDE_CXX_0X:BOOL=ON
      CMAKE_CACHE_ARGS
        ${ep_common_cache_args}
      CMAKE_CACHE_DEFAULT_ARGS

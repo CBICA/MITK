@@ -58,6 +58,8 @@ if(NOT DEFINED VTK_DIR)
     list(APPEND additional_cmake_args
         -DVTK_Group_Qt:BOOL=ON
         -DQt5_DIR:PATH=${Qt5_DIR}
+        -DModule_vtkGUISupportQtOpenGL:BOOL=ON 
+        -DVTK_USE_QVTK_QTOPENGL:BOOL=ON  
      )
   endif()
 
@@ -80,6 +82,10 @@ if(NOT DEFINED VTK_DIR)
         -DVTK_USE_SYSTEM_FREETYPE:BOOL=${VTK_USE_SYSTEM_FREETYPE}
         -DVTK_LEGACY_REMOVE:BOOL=ON
         -DModule_vtkTestingRendering:BOOL=ON
+        -DVTK_LEGACY_SILENT:BOOL=ON # disables the QVTKWidget warning
+        -DCMAKE_CXX_MP_FLAG=ON 
+        -DCMAKE_DEBUG_POSTFIX:STRING=d
+        -DVTK_QT_VERSION:STRING=5 
         ${additional_cmake_args}
     CMAKE_CACHE_ARGS
       ${ep_common_cache_args}

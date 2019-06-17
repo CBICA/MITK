@@ -80,6 +80,9 @@ if(MITK_USE_OpenCV)
         -DENABLE_CXX11:BOOL=ON
         -DWITH_IPP:BOOL=OFF
         -DBUILD_IPP_IW:BOOL=OFF
+        -DWITH_EIGEN:BOOL=TRUE # [Eigen] dependency, enables better matrix operations 
+        -DEIGEN_INCLUDE_PATH:STRING=${Eigen_DIR}/Eigen        
+        -DWITH_OPENMP:BOOL=ON
         ${additional_cmake_args}
       CMAKE_CACHE_ARGS
         ${ep_common_cache_args}
