@@ -39,9 +39,12 @@ public:
 protected:
   virtual void CreateQtPartControl(QWidget *parent) override;
 
+  void CreateConnectionsForGUIElements();
+
   virtual void SetFocus() override;
 
   void CreateChart();
+  void UpdateChart();
   void ClearChart();
 
   void AddData();
@@ -51,18 +54,35 @@ protected:
   void ShowXErrorOptions(bool show);
   void ShowYErrorOptions(bool show);
 
+  void AdaptZoomX();
+  void AdaptZoomY();
+
+  void AdaptDataGUI(const QString &chartType);
+  void ResetDataGUI();
+
 private:
   void FillRandomDataValues();
   std::vector<double> GenerateRandomNumbers(unsigned int amount, double max) const;
-  std::vector<double> ConvertToVector(const QString& data, QChar delimiter=';') const;
+  std::vector<double> ConvertToDoubleVector(const QString &data, QChar delimiter = ';') const;
+  std::vector<std::string> ConvertToStringVector(const QString &data, QChar delimiter = ';') const;
   std::map<double, double> CreateMap(std::vector<double> keys, std::vector<double> values) const;
   std::string ConvertToText(std::vector<double> numbers, std::string delimiter = ";") const;
   std::string ConvertToText(std::map<double, double> numbers, std::string delimiter = ";") const;
   QmitkChartWidget::ColorTheme GetColorTheme() const;
+  void OnLegendPositionChanged(const QString &newPosition);
+  void OnTitleChanged();
+  void OnXAxisLabelChanged();
+  void OnYAxisLabelChanged();
+  void OnYAxisScaleChanged(const QString &newYAxisScale);
+  void OnShowLegendChanged(int newState);
+  void OnStackedDataChanged(int newState);
+  void OnShowDataPointsChanged(int newState);
+  void OnShowSubchartChanged(int newState);
 
   std::map<std::string, QmitkChartWidget::ChartType> m_ChartNameToChartType;
   std::map<std::string, QmitkChartWidget::LineStyle> m_LineNameToLineType;
   std::map<std::string, QmitkChartWidget::AxisScale> m_AxisScaleNameToAxisScaleType;
+  std::map<std::string, QmitkChartWidget::LegendPosition> m_LegendPositionNameToLegendPositionType;
 
   unsigned int countForUID = 0;
   Ui::ChartExampleControls m_Controls;

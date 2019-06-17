@@ -43,13 +43,13 @@ int main(int argc, char* argv[])
   parser.setContributor("MIC");
   parser.setDescription("Command line interface to Fiberfox." " Simulate a diffusion-weighted image from a tractogram using the specified parameter file.");
   parser.setArgumentPrefix("--", "-");
-  parser.addArgument("", "o", mitkCommandLineParser::OutputFile, "Output root:", "output root", us::Any(), false);
-  parser.addArgument("", "i", mitkCommandLineParser::String, "Input:", "Input tractogram or diffusion-weighted image.", us::Any(), false);
-  parser.addArgument("parameters", "p", mitkCommandLineParser::InputFile, "Parameter file:", "fiberfox parameter file (.ffp)", us::Any(), false);
-  parser.addArgument("template", "t", mitkCommandLineParser::String, "Template image:", "Use parameters of the template diffusion-weighted image.", us::Any());
+  parser.addArgument("", "o", mitkCommandLineParser::String, "Output root:", "output folder and file prefix", us::Any(), false, false, false, mitkCommandLineParser::Output);
+  parser.addArgument("", "i", mitkCommandLineParser::String, "Input:", "input tractogram or diffusion-weighted image", us::Any(), false, false, false, mitkCommandLineParser::Input);
+  parser.addArgument("parameters", "p", mitkCommandLineParser::String, "Parameter file:", "fiberfox parameter file (.ffp)", us::Any(), false, false, false, mitkCommandLineParser::Input);
+  parser.addArgument("template", "t", mitkCommandLineParser::String, "Template image:", "use parameters of the template image", us::Any(), true, false, false, mitkCommandLineParser::Input);
   parser.addArgument("verbose", "v", mitkCommandLineParser::Bool, "Output additional images:", "output volume fraction images etc.", us::Any());
-  parser.addArgument("dont_apply_direction_matrix", "", mitkCommandLineParser::Bool, "Don't apply direction matrix:", "Don't rotate gradients by image direction matrix.", us::Any());
-  parser.addArgument("fix_seed", "", mitkCommandLineParser::Bool, "Use fix random seed:", "Always use same sequence of random numbers.", us::Any());
+  parser.addArgument("dont_apply_direction_matrix", "", mitkCommandLineParser::Bool, "Don't apply direction matrix:", "don't rotate gradients by image direction matrix", us::Any());
+  parser.addArgument("fix_seed", "", mitkCommandLineParser::Bool, "Use fix random seed:", "always use same sequence of random numbers", us::Any());
 
   std::map<std::string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
   if (parsedArgs.size()==0)
@@ -181,8 +181,11 @@ int main(int argc, char* argv[])
   if (verbose)
   {
     MITK_DEBUG << outName << ".ffp";
+    parameters.m_Misc.m_OutputAdditionalImages = true;
     parameters.SaveParameters(outName+".ffp");
   }
+  else
+    parameters.m_Misc.m_OutputAdditionalImages = false;
   
   if (apply_direction_matrix)
   {
@@ -194,22 +197,44 @@ int main(int argc, char* argv[])
   tractsToDwiFilter->Update();
 
   mitk::Image::Pointer image = mitk::GrabItkImageMemory(tractsToDwiFilter->GetOutput());
-  if (apply_direction_matrix)
-    mitk::DiffusionPropertyHelper::SetGradientContainer(image, parameters.m_SignalGen.GetItkGradientContainer());
-  else
-    mitk::DiffusionPropertyHelper::SetOriginalGradientContainer(image, parameters.m_SignalGen.GetItkGradientContainer());
-  mitk::DiffusionPropertyHelper::SetReferenceBValue(image, parameters.m_SignalGen.GetBvalue());
-  mitk::DiffusionPropertyHelper::InitializeImage(image);
 
-  if (file_extension=="")
-    mitk::IOUtil::Save(image, "DWI_NIFTI", outName+".nii.gz");
-  else if (file_extension==".nii" || file_extension==".nii.gz")
-    mitk::IOUtil::Save(image, "DWI_NIFTI", outName+file_extension);
+  if (parameters.m_SignalGen.GetNumWeightedVolumes()>0)
+  {
+    if (apply_direction_matrix)
+      mitk::DiffusionPropertyHelper::SetGradientContainer(image, parameters.m_SignalGen.GetItkGradientContainer());
+    else
+      mitk::DiffusionPropertyHelper::SetOriginalGradientContainer(image, parameters.m_SignalGen.GetItkGradientContainer());
+    mitk::DiffusionPropertyHelper::SetReferenceBValue(image, parameters.m_SignalGen.GetBvalue());
+    mitk::DiffusionPropertyHelper::InitializeImage(image);
+
+    if (file_extension=="")
+      mitk::IOUtil::Save(image, "DWI_NIFTI", outName+".nii.gz");
+    else if (file_extension==".nii" || file_extension==".nii.gz")
+      mitk::IOUtil::Save(image, "DWI_NIFTI", outName+file_extension);
+    else
+      mitk::IOUtil::Save(image, outName+file_extension);
+  }
   else
-    mitk::IOUtil::Save(image, outName+file_extension);
+    mitk::IOUtil::Save(image, outName+".nii.gz");
 
   if (verbose)
   {
+    if (tractsToDwiFilter->GetTickImage().IsNotNull())
+    {
+      mitk::Image::Pointer mitkImage = mitk::Image::New();
+      itk::TractsToDWIImageFilter< short >::Float2DImageType::Pointer itkImage = tractsToDwiFilter->GetTickImage();
+      mitkImage = mitk::GrabItkImageMemory( itkImage.GetPointer() );
+      mitk::IOUtil::Save(mitkImage, outName+"_Ticks.nii.gz");
+    }
+
+    if (tractsToDwiFilter->GetRfImage().IsNotNull())
+    {
+      mitk::Image::Pointer mitkImage = mitk::Image::New();
+      itk::TractsToDWIImageFilter< short >::Float2DImageType::Pointer itkImage = tractsToDwiFilter->GetRfImage();
+      mitkImage = mitk::GrabItkImageMemory( itkImage.GetPointer() );
+      mitk::IOUtil::Save(mitkImage, outName+"_TimeFromRf.nii.gz");
+    }
+
     std::vector< itk::TractsToDWIImageFilter< short >::ItkDoubleImgType::Pointer > volumeFractions = tractsToDwiFilter->GetVolumeFractions();
     for (unsigned int k=0; k<volumeFractions.size(); k++)
     {

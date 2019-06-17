@@ -2474,8 +2474,8 @@
          <string>Save Parameters</string>
         </property>
         <property name="icon">
-         <iconset resource="../../resources/QmitkDiffusionImaging.qrc">
-          <normaloff>:/QmitkDiffusionImaging/general_icons/download.ico</normaloff>:/QmitkDiffusionImaging/general_icons/download.ico</iconset>
+         <iconset resource="../../resources/QmitkFiberfox.qrc">
+          <normaloff>:/QmitkFiberfox/download.png</normaloff>:/QmitkFiberfox/download.png</iconset>
         </property>
        </widget>
       </item>
@@ -2494,8 +2494,8 @@
          <string>Load Parameters</string>
         </property>
         <property name="icon">
-         <iconset resource="../../resources/QmitkDiffusionImaging.qrc">
-          <normaloff>:/QmitkDiffusionImaging/general_icons/upload.ico</normaloff>:/QmitkDiffusionImaging/general_icons/upload.ico</iconset>
+         <iconset resource="../../resources/QmitkFiberfox.qrc">
+          <normaloff>:/QmitkFiberfox/upload.png</normaloff>:/QmitkFiberfox/upload.png</iconset>
         </property>
        </widget>
       </item>
@@ -2538,8 +2538,8 @@
          <string>Start Simulation</string>
         </property>
         <property name="icon">
-         <iconset resource="../../resources/QmitkDiffusionImaging.qrc">
-          <normaloff>:/QmitkDiffusionImaging/general_icons/right.ico</normaloff>:/QmitkDiffusionImaging/general_icons/right.ico</iconset>
+         <iconset resource="../../resources/QmitkFiberfox.qrc">
+          <normaloff>:/QmitkFiberfox/right.png</normaloff>:/QmitkFiberfox/right.png</iconset>
         </property>
        </widget>
       </item>
@@ -2731,8 +2731,8 @@
          <string>Abort Simulation</string>
         </property>
         <property name="icon">
-         <iconset resource="../../resources/QmitkDiffusionImaging.qrc">
-          <normaloff>:/QmitkDiffusionImaging/general_icons/abort.ico</normaloff>:/QmitkDiffusionImaging/general_icons/abort.ico</iconset>
+         <iconset resource="../../resources/QmitkFiberfox.qrc">
+          <normaloff>:/QmitkFiberfox/stop.png</normaloff>:/QmitkFiberfox/stop.png</iconset>
         </property>
        </widget>
       </item>
@@ -2885,7 +2885,7 @@
   <tabstop>m_ZeroRinging</tabstop>
  </tabstops>
  <resources>
-  <include location="../../resources/QmitkDiffusionImaging.qrc"/>
+  <include location="../../resources/QmitkFiberfox.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -14,8 +14,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-#ifndef DICOMSEGMENTATIONPROPERTYHANDLER_H_
-#define DICOMSEGMENTATIONPROPERTYHANDLER_H_
+#ifndef DICOMPMPROPERTYHELPER_H_
+#define DICOMPMPROPERTYHELPER_H_
 
 #include <mitkDICOMTag.h>
 #include <mitkLabel.h>
@@ -25,7 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 namespace mitk
 {
-  class MITKMULTILABEL_EXPORT DICOMSegmentationPropertyHandler
+  class MITKMULTILABEL_EXPORT DICOMSegmentationPropertyHelper
   {
   public:
     static void DeriveDICOMSegmentationProperties(LabelSetImage* dicomSegImage);

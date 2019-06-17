@@ -100,6 +100,20 @@ public:
   */
   void AddData1D(const std::vector<double>& data1D, const std::string& label, ChartType chartType = ChartType::bar);
 
+   /*!
+   * \brief Updates data of an existing label
+   * \param data1D the 1D data , \sa AddData1D
+   * \param label the (existing) label
+   * \note if the label does not exist, nothing happens
+   */
+  void UpdateData1D(const std::vector<double> &data1D, const std::string &label);
+
+  /*!
+   * \sa UpdateData1D
+   * \sa AddData2D
+   */
+  void UpdateData2D(const std::map<double, double> &data2D, const std::string &label);
+
   /*!
   * \brief Adds 2D data to the widget. Call repeatedly for displaying multiple charts.
   * \details each entry represents a data point: key: value --> x-value: y-value.
@@ -120,6 +134,8 @@ public:
   * \throws Invalid Argument Exception when the label cannot be found
   */
   void RemoveData(const std::string& label);
+
+  void UpdateLabel(const std::string& existingLabel, const std::string& newLabel);
 
   /*!
   * \brief Sets the color of one data entry (identifier is previously assigned label)
@@ -150,15 +166,17 @@ public:
   void SetXAxisLabel(const std::string& label);
 
   void SetYAxisLabel(const std::string& label);
+
+   /*!
+   * \brief Sets labels for pie chart data.
+   * \note in AddData1D, the label still has to be given that acts as a unique id. However, the label is omitted then.
+   */
+  void SetPieLabels(const std::vector<std::string> &pieLabels, const std::string &label);
   /*!
   * \brief Sets a title for the chart.
   */
   void SetTitle(const std::string &title);
 
-  /*!
-  * \brief Changes the chart type for all data entries and reloads the chart
-  */
-  void SetChartTypeForAllDataAndReload(ChartType type);
   /*!
   * \brief Sets the chart type for a data entry
   * \details for available types, see ChartType
@@ -235,6 +253,17 @@ public:
    * \param showErrorBars if error bars are displayed or not.
    */
   void SetShowErrorBars(bool showErrorBars);
+
+  /*!
+   * \brief Sets the min and max x values of the chart
+   * \details Zooms in to view the values between minValue and maxValue in x direction
+   */
+  void SetMinMaxValueXView(double minValueX,double maxValueX);
+  /*!
+   * \brief Sets the min and max y values of the chart
+   * \details Zooms in to view the values between minValue and maxValue in y direction
+   */
+  void SetMinMaxValueYView(double minValueY, double maxValueY);
 
   /*!
    * \brief Reloads the chart in the widget

@@ -178,7 +178,7 @@ void QmitkMultiNodeSelectionWidget::UpdateList()
       widget->SetSelectedNode(node);
       widget->SetClearAllowed(m_IsOptional || m_CurrentSelection.size() > 1);
 
-      connect(widget, SIGNAL(ClearSelection(mitk::DataNode*)), this, SLOT(OnClearSelection(mitk::DataNode*)));
+      connect(widget, &QmitkNodeSelectionListItemWidget::ClearSelection, this, &QmitkMultiNodeSelectionWidget::OnClearSelection);
       newItem->setData(Qt::UserRole, QVariant::fromValue<mitk::DataNode::Pointer>(node));
 
       m_Controls.list->addItem(newItem);
@@ -227,7 +227,7 @@ void QmitkMultiNodeSelectionWidget::SetCurrentSelection(NodeList selectedNodes)
   }
 };
 
-void QmitkMultiNodeSelectionWidget::OnClearSelection(mitk::DataNode* node)
+void QmitkMultiNodeSelectionWidget::OnClearSelection(const mitk::DataNode* node)
 {
   auto finding = std::find(std::begin(m_CurrentSelection), std::end(m_CurrentSelection), node);
   m_CurrentSelection.erase(finding);
@@ -242,3 +242,13 @@ void QmitkMultiNodeSelectionWidget::OnClearSelection(mitk::DataNode* node)
   }
   this->UpdateInfo();
 };
+
+void QmitkMultiNodeSelectionWidget::NodeRemovedFromStorage(const mitk::DataNode* node)
+{
+  auto finding = std::find(std::begin(m_CurrentSelection), std::end(m_CurrentSelection), node);
+
+  if (finding != std::end(m_CurrentSelection))
+  {
+    this->OnClearSelection(node);
+  }
+}

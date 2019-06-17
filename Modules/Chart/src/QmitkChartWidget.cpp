@@ -52,8 +52,12 @@ public:
   void AddData2D(const std::map<double, double> &data2D,
                  const std::string &label,
                  QmitkChartWidget::ChartType chartType);
+  void UpdateData1D(const std::vector<double> &data1D, const std::string &label);
+  void UpdateData2D(const std::map<double, double> &data2D, const std::string &label);
 
   void RemoveData(const std::string &label);
+
+  void UpdateLabel(const std::string &existingLabel, const std::string &newLabel);
 
   void ClearData();
 
@@ -66,6 +70,8 @@ public:
 
   void SetYAxisLabel(const std::string &label);
 
+  void SetPieLabels(const std::vector<std::string> &pieLabels, const std::string &label);
+
   void SetTitle(const std::string &title);
 
   void SetXErrorBars(const std::string &label,
@@ -77,9 +83,7 @@ public:
   std::string GetThemeName() const;
   void SetThemeName(ColorTheme style);
 
-  void SetChartType(QmitkChartWidget::ChartType chartType);
   void SetLegendPosition(LegendPosition position);
-  void SetChartTypeByLabel(const std::string &label, QmitkChartWidget::ChartType chartType);
 
   void Show(bool showSubChart);
 
@@ -90,8 +94,15 @@ public:
 
   void SetShowDataPoints(bool showDataPoints = false);
 
+  void SetShowSubchart(bool showSubChart);
+
   void SetChartType(const std::string &label, QmitkChartWidget::ChartType chartType);
+
+  void SetMinMaxValueXView(double minValueX, double maxValueX);
+  void SetMinMaxValueYView(double minValueY, double maxValueY);
+
   QList<QVariant> ConvertErrorVectorToQList(const std::vector<double> &error);
+  QList<QVariant> ConvertVectorToQList(const std::vector<std::string> &vec);
 
   std::string ConvertChartTypeToString(QmitkChartWidget::ChartType chartType) const;
 
@@ -119,7 +130,8 @@ private:
   std::map<QmitkChartWidget::AxisScale, std::string> m_AxisScaleToName;
 };
 
-std::string QmitkChartWidget::Impl::GetThemeName() const {
+std::string QmitkChartWidget::Impl::GetThemeName() const
+{
   return m_C3Data.GetThemeName().toString().toStdString();
 }
 
@@ -217,9 +229,39 @@ void QmitkChartWidget::Impl::AddData2D(const std::map<double, double> &data2D,
     SetShowDataPoints(true);
     MITK_INFO << "Enabling data points for all because of scatter plot";
   }
+  unsigned int sizeOfC3xyData = static_cast<unsigned int>(m_C3xyData.size());
+  m_C3xyData.push_back(std::make_unique<QmitkChartxyData>(data2DConverted,
+                                                          QVariant(QString::fromStdString(uniqueLabel)),
+                                                          QVariant(QString::fromStdString(chartTypeName)),
+                                                          QVariant(sizeOfC3xyData)));
+}
 
-  m_C3xyData.push_back(std::make_unique<QmitkChartxyData>(
-    data2DConverted, QVariant(QString::fromStdString(uniqueLabel)), QVariant(QString::fromStdString(chartTypeName))));
+void QmitkChartWidget::Impl::UpdateData1D(const std::vector<double> &data1D, const std::string &label)
+{
+  std::map<double, double> transformedData2D;
+  unsigned int count = 0;
+  // transform the 1D data to 2D data
+  for (const auto &ele : data1D)
+  {
+    transformedData2D[count] = ele;
+    count++;
+  }
+
+  UpdateData2D(transformedData2D, label);
+}
+
+void QmitkChartWidget::Impl::UpdateData2D(const std::map<double, double> &data2D, const std::string &label)
+{
+  auto element = GetDataElementByLabel(label);
+  if (element)
+  {
+    QMap<QVariant, QVariant> data2DConverted;
+    for (const auto &aValue : data2D)
+    {
+      data2DConverted.insert(aValue.first, aValue.second);
+    }
+    element->SetData(data2DConverted);
+  }
 }
 
 void QmitkChartWidget::Impl::RemoveData(const std::string &label)
@@ -243,6 +285,16 @@ void QmitkChartWidget::Impl::ClearData()
     m_WebChannel->deregisterObject(xyData.get());
   }
   m_C3xyData.clear();
+}
+
+void QmitkChartWidget::Impl::UpdateLabel(const std::string &existingLabel, const std::string &newLabel) {
+  auto element = GetDataElementByLabel(existingLabel);
+  if (element)
+  {
+    auto definedLabels = GetDataLabels(m_C3xyData);
+    auto uniqueLabel = GetUniqueLabelName(definedLabels, newLabel);
+    element->SetLabel(QString::fromStdString(uniqueLabel));
+  }
 }
 
 void QmitkChartWidget::Impl::SetColor(const std::string &label, const std::string &colorName)
@@ -301,6 +353,28 @@ void QmitkChartWidget::Impl::SetYAxisLabel(const std::string &label)
   m_C3Data.SetYAxisLabel(QString::fromStdString(label));
 }
 
+void QmitkChartWidget::Impl::SetPieLabels(const std::vector<std::string> &pieLabels, const std::string &label)
+{
+  auto element = GetDataElementByLabel(label);
+  if (element)
+  {
+    if (element->GetChartType() == QVariant("pie"))
+    {
+      auto dataY = element->GetYData();
+      element->SetPieLabels(ConvertVectorToQList(pieLabels));
+      if (static_cast<unsigned>(dataY.size()) != pieLabels.size())
+      {
+        MITK_INFO << "data has " << dataY.size() << " entries whereas pie labels have " << pieLabels.size()
+                  << " entries. Unnamed pie labels automatically get a numerical label.";
+      }
+    }
+    else
+    {
+      MITK_INFO << "label" << label << "has chart type " << element->GetChartType().toString().toStdString() << ", but pie is required";
+    }
+  }
+}
+
 void QmitkChartWidget::Impl::SetTitle(const std::string &title)
 {
   m_C3Data.SetTitle(QString::fromStdString(title));
@@ -310,33 +384,6 @@ void QmitkChartWidget::Impl::SetThemeName(QmitkChartWidget::ColorTheme style)
 {
   const std::string themeName(m_ColorThemeToName.at(style));
   m_C3Data.SetThemeName(QString::fromStdString(themeName));
-}
-
-void QmitkChartWidget::Impl::SetChartType(QmitkChartWidget::ChartType chartType)
-{
-  for (auto iterator = m_C3xyData.begin(); iterator != m_C3xyData.end(); ++iterator)
-  {
-    SetChartTypeByLabel((*iterator)->GetLabel().toString().toStdString(), chartType);
-  }
-
-  auto chartTypeName = ConvertChartTypeToString(chartType);
-  const QString command = QString::fromStdString("transformView('" + chartTypeName + "')");
-  CallJavaScriptFuntion(command);
-}
-
-void QmitkChartWidget::Impl::SetChartTypeByLabel(const std::string &label, QmitkChartWidget::ChartType chartType)
-{
-  auto element = GetDataElementByLabel(label);
-  if (element)
-  {
-    if (chartType == ChartType::scatter)
-    {
-      SetShowDataPoints(true);
-      MITK_INFO << "Enabling data points for all because of scatter plot";
-    }
-    auto chartTypeName = ConvertChartTypeToString(chartType);
-    element->SetChartType(QVariant(QString::fromStdString(chartTypeName)));
-  }
 }
 
 void QmitkChartWidget::Impl::SetLegendPosition(QmitkChartWidget::LegendPosition legendPosition)
@@ -386,6 +433,10 @@ void QmitkChartWidget::Impl::SetShowDataPoints(bool showDataPoints)
   }
 }
 
+void QmitkChartWidget::Impl::SetShowSubchart(bool showSubChart) {
+  m_C3Data.SetShowSubchart(showSubChart);
+}
+
 void QmitkChartWidget::Impl::SetChartType(const std::string &label, QmitkChartWidget::ChartType chartType)
 {
   auto element = GetDataElementByLabel(label);
@@ -401,6 +452,16 @@ void QmitkChartWidget::Impl::SetChartType(const std::string &label, QmitkChartWi
   }
 }
 
+void QmitkChartWidget::Impl::SetMinMaxValueXView(double minValueX, double maxValueX) {
+  m_C3Data.SetMinValueXView(minValueX);
+  m_C3Data.SetMaxValueXView(maxValueX);
+}
+
+void QmitkChartWidget::Impl::SetMinMaxValueYView(double minValueY, double maxValueY) {
+  m_C3Data.SetMinValueYView(minValueY);
+  m_C3Data.SetMaxValueYView(maxValueY);
+}
+
 QList<QVariant> QmitkChartWidget::Impl::ConvertErrorVectorToQList(const std::vector<double> &error)
 {
   QList<QVariant> errorConverted;
@@ -410,6 +471,17 @@ QList<QVariant> QmitkChartWidget::Impl::ConvertErrorVectorToQList(const std::vec
   }
 
   return errorConverted;
+}
+
+QList<QVariant> QmitkChartWidget::Impl::ConvertVectorToQList(const std::vector<std::string> &vec)
+{
+  QList<QVariant> vecConverted;
+  for (const auto &aValue : vec)
+  {
+    vecConverted.append(QString::fromStdString(aValue));
+  }
+
+  return vecConverted;
 }
 
 void QmitkChartWidget::Impl::SetXErrorBars(const std::string &label,
@@ -464,12 +536,23 @@ void QmitkChartWidget::Impl::ClearJavaScriptChart()
 
 void QmitkChartWidget::Impl::InitializeJavaScriptChart()
 {
-  m_WebChannel->registerObject(QStringLiteral("chartData"), &m_C3Data);
+  auto alreadyRegisteredObjects = m_WebChannel->registeredObjects();
+  auto alreadyRegisteredObjectsValues = alreadyRegisteredObjects.values();
+  // only register objects that have not been registered yet
+  if (alreadyRegisteredObjectsValues.indexOf(&m_C3Data) == -1)
+  {
+    m_WebChannel->registerObject(QStringLiteral("chartData"), &m_C3Data);
+  }
+
   unsigned count = 0;
   for (auto &xyData : m_C3xyData)
   {
-    QString variableName = "xyData" + QString::number(count);
-    m_WebChannel->registerObject(variableName, xyData.get());
+    // only register objects that have not been registered yet
+    if (alreadyRegisteredObjectsValues.indexOf(xyData.get()) == -1)
+    {
+      QString variableName = "xyData" + QString::number(count);
+      m_WebChannel->registerObject(variableName, xyData.get());
+    }
     count++;
   }
 
@@ -488,7 +571,8 @@ std::string QmitkChartWidget::Impl::GetUniqueLabelName(const QList<QVariant> &la
   return currentLabel.toStdString();
 }
 
-QmitkChartWidget::QmitkChartWidget(QWidget *parent) : QWidget(parent), m_Impl(new Impl(this)) {
+QmitkChartWidget::QmitkChartWidget(QWidget *parent) : QWidget(parent), m_Impl(new Impl(this))
+{
   connect(this, &QmitkChartWidget::PageSuccessfullyLoaded, this, &QmitkChartWidget::OnPageSuccessfullyLoaded);
 }
 
@@ -519,9 +603,23 @@ void QmitkChartWidget::AddData1D(const std::vector<double> &data1D, const std::s
   m_Impl->AddData1D(data1D, label, type);
 }
 
+void QmitkChartWidget::UpdateData1D(const std::vector<double> &data1D, const std::string &label)
+{
+  m_Impl->UpdateData1D(data1D, label);
+}
+
+void QmitkChartWidget::UpdateData2D(const std::map<double, double> &data2D, const std::string &label)
+{
+  m_Impl->UpdateData2D(data2D, label);
+}
+
 void QmitkChartWidget::RemoveData(const std::string &label)
 {
   m_Impl->RemoveData(label);
+}
+
+void QmitkChartWidget::UpdateLabel(const std::string &existingLabel, const std::string &newLabel) {
+  m_Impl->UpdateLabel(existingLabel, newLabel);
 }
 
 void QmitkChartWidget::SetXAxisLabel(const std::string &label)
@@ -532,6 +630,11 @@ void QmitkChartWidget::SetXAxisLabel(const std::string &label)
 void QmitkChartWidget::SetYAxisLabel(const std::string &label)
 {
   m_Impl->SetYAxisLabel(label);
+}
+
+void QmitkChartWidget::SetPieLabels(const std::vector<std::string> &pieLabels, const std::string &label)
+{
+  m_Impl->SetPieLabels(pieLabels, label);
 }
 
 void QmitkChartWidget::SetTitle(const std::string &title)
@@ -597,7 +700,8 @@ void QmitkChartWidget::OnLoadFinished(bool isLoadSuccessful)
   }
 }
 
-void QmitkChartWidget::OnPageSuccessfullyLoaded() {
+void QmitkChartWidget::OnPageSuccessfullyLoaded()
+{
   auto themeName = m_Impl->GetThemeName();
   QString command;
   if (themeName == "dark")
@@ -612,17 +716,6 @@ void QmitkChartWidget::OnPageSuccessfullyLoaded() {
   m_Impl->CallJavaScriptFuntion(command);
 }
 
-std::string QmitkChartWidget::convertBooleanValue(bool value) const {
-  std::stringstream converter;
-  converter << std::boolalpha << value;
-  return converter.str();
-}
-
-void QmitkChartWidget::SetChartTypeForAllDataAndReload(ChartType type)
-{
-  m_Impl->SetChartType(type);
-}
-
 void QmitkChartWidget::SetTheme(ColorTheme themeEnabled)
 {
   m_Impl->SetThemeName(themeEnabled);
@@ -630,14 +723,22 @@ void QmitkChartWidget::SetTheme(ColorTheme themeEnabled)
 
 void QmitkChartWidget::SetShowSubchart(bool showSubChart)
 {
-  QString subChartString = QString::fromStdString(convertBooleanValue(showSubChart));
-  const QString command = QString("SetShowSubchart(" + subChartString + ")");
-  m_Impl->CallJavaScriptFuntion(command);
+  m_Impl->SetShowSubchart(showSubChart);
 }
 
 void QmitkChartWidget::SetShowErrorBars(bool showErrorBars)
 {
   m_Impl->SetShowErrorBars(showErrorBars);
+}
+
+void QmitkChartWidget::SetMinMaxValueXView(double minValueX, double maxValueX)
+{
+  m_Impl->SetMinMaxValueXView(minValueX, maxValueX);
+}
+
+void QmitkChartWidget::SetMinMaxValueYView(double minValueY, double maxValueY)
+{
+  m_Impl->SetMinMaxValueYView(minValueY, maxValueY);
 }
 
 void QmitkChartWidget::Reload()

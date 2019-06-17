@@ -33,6 +33,16 @@ struct InputParameters
   std::string outputFilename;
   bool verbose;
   std::string settingsFile;
+  std::string imageType;
+};
+
+struct BandpassSettings
+{
+  float highPass;
+  float lowPass;
+  float alphaLow;
+  float alphaHigh;
+  float speedOfSound;
 };
 
 struct CropSettings
@@ -48,6 +58,7 @@ struct CropSettings
 struct ResampleSettings
 {
   double spacing;
+  int dimX;
 };
 
 struct BModeSettings
@@ -59,6 +70,7 @@ struct BModeSettings
 struct ProcessSettings
 {
   bool DoBeamforming;
+  bool DoBandpass;
   bool DoCropping;
   bool DoResampling;
   bool DoBmode;
@@ -76,16 +88,20 @@ InputParameters parseInput(int argc, char* argv[])
 
   parser.beginGroup("Required parameters");
   parser.addArgument(
-    "inputImage", "i", mitkCommandLineParser::InputImage,
+    "inputImage", "i", mitkCommandLineParser::Image,
     "Input image (mitk::Image)", "input image (.nrrd file)",
-    us::Any(), false);
+    us::Any(), false, false, false, mitkCommandLineParser::Input);
   parser.addArgument(
-    "output", "o", mitkCommandLineParser::OutputFile,
+    "output", "o", mitkCommandLineParser::File,
     "Output filename", "output image (.nrrd file)",
-    us::Any(), false);
+    us::Any(), false, false, false, mitkCommandLineParser::Output);
   parser.addArgument(
     "settings", "s", mitkCommandLineParser::String,
     "settings file", "file containing beamforming and other specifications(.xml file)",
+    us::Any(), false);
+  parser.addArgument(
+    "type", "t", mitkCommandLineParser::String,
+    "image type", "Specifies whether to use the PA or US subsection of the xml file must be 'PA' or 'US'",
     us::Any(), false);
   parser.endGroup();
 
@@ -123,10 +139,25 @@ InputParameters parseInput(int argc, char* argv[])
   else
     mitkThrow() << "No settings image path given..";
 
+  if (parsedArgs.count("type"))
+    input.imageType = us::any_cast<std::string>(parsedArgs["type"]);
+  else
+    mitkThrow() << "No settings image type given..";
+
   return input;
 }
 
-void ParseXML(std::string xmlFile, InputParameters input, mitk::BeamformingSettings::Pointer *bfSet, CropSettings& cropSet, ResampleSettings& resSet, BModeSettings& bmodeSet, ProcessSettings& processSet)
+TiXmlElement* getRootChild(TiXmlElement* root, std::string childName)
+{
+  for (TiXmlElement* elem = root->FirstChildElement(); elem != NULL; elem = elem->NextSiblingElement())
+  {
+    if (elem->Value() == childName)
+      return elem;
+  }
+  return nullptr;
+}
+
+void ParseXML(std::string xmlFile, InputParameters input, mitk::BeamformingSettings::Pointer *bfSet, BandpassSettings& bandpassSet, CropSettings& cropSet, ResampleSettings& resSet, BModeSettings& bmodeSet, ProcessSettings& processSet)
 {
   MITK_INFO << "Loading configuration File \"" << xmlFile << "\"";
   TiXmlDocument doc(xmlFile);
@@ -139,11 +170,20 @@ void ParseXML(std::string xmlFile, InputParameters input, mitk::BeamformingSetti
     mitkThrow() << "Failed to load file: No root element.";
     doc.Clear();
   }
-  for (TiXmlElement* elem = root->FirstChildElement(); elem != NULL; elem = elem->NextSiblingElement())
+
+  TiXmlElement* elemtop = getRootChild(root, input.imageType);
+  if(elemtop == nullptr)
+      mitkThrow() << "The xml file is wrongly formatted, no element \"" << input.imageType << "\" found";
+
+  for (TiXmlElement* elem = elemtop->FirstChildElement(); elem != NULL; elem = elem->NextSiblingElement())
   {
     std::string elemName = elem->Value();
     if (elemName == "Beamforming")
     {
+      processSet.DoBeamforming = std::stoi(elem->Attribute("do"));
+      if (!processSet.DoBeamforming)
+        continue;
+
       float PitchInMeters = std::stof(elem->Attribute("pitchInMeters"));
       float SpeedOfSound = std::stof(elem->Attribute("speedOfSound"));
       float Angle = std::stof(elem->Attribute("angle"));
@@ -197,25 +237,47 @@ void ParseXML(std::string xmlFile, InputParameters input, mitk::BeamformingSetti
         ApodizationArraySize,
         Algorithm
       );
-      processSet.DoBeamforming = std::stoi(elem->Attribute("do"));
     }
-    if (elemName == "Cropping") 
+    if (elemName == "Bandpass")
     {
+      processSet.DoBandpass = std::stoi(elem->Attribute("do"));
+      if (!processSet.DoBandpass)
+        continue;
+
+      bandpassSet.highPass = std::stof(elem->Attribute("highPass"));
+      bandpassSet.lowPass = std::stof(elem->Attribute("lowPass"));
+      bandpassSet.alphaLow = std::stof(elem->Attribute("alphaLow"));
+      bandpassSet.alphaHigh = std::stof(elem->Attribute("alphaHigh"));
+      bandpassSet.speedOfSound = std::stof(elem->Attribute("speedOfSound"));
+    }
+    if (elemName == "Cropping")
+    {
+      processSet.DoCropping = std::stoi(elem->Attribute("do"));
+      if (!processSet.DoCropping)
+        continue;
+
       cropSet.above = std::stoi(elem->Attribute("cutAbove"));
       cropSet.below = std::stoi(elem->Attribute("cutBelow"));
       cropSet.right = std::stoi(elem->Attribute("cutRight"));
       cropSet.left = std::stoi(elem->Attribute("cutLeft"));
       cropSet.zStart = std::stoi(elem->Attribute("firstSlice"));
       cropSet.zEnd = std::stoi(elem->Attribute("cutSlices"));
-      processSet.DoCropping = std::stoi(elem->Attribute("do"));
     }
     if (elemName == "Resampling")
     {
-      resSet.spacing = std::stod(elem->Attribute("spacing"));
       processSet.DoResampling = std::stoi(elem->Attribute("do"));
+      if (!processSet.DoResampling)
+        continue;
+
+      resSet.spacing = std::stod(elem->Attribute("spacing"));
+      resSet.dimX = std::stoi(elem->Attribute("dimX"));
     }
     if (elemName == "BMode")
     {
+      processSet.DoBmode = std::stoi(elem->Attribute("do"));
+      if (!processSet.DoBmode)
+        continue;
+
       std::string methodStr = elem->Attribute("method");
       if (methodStr == "EnvelopeDetection")
         bmodeSet.method = mitk::PhotoacousticFilterService::BModeMethod::EnvelopeDetection;
@@ -224,7 +286,6 @@ void ParseXML(std::string xmlFile, InputParameters input, mitk::BeamformingSetti
       else
         mitkThrow() << "BMode method incorrectly set in configuration file";
       bmodeSet.UseLogFilter = (bool)std::stoi(elem->Attribute("useLogFilter"));
-      processSet.DoBmode = std::stoi(elem->Attribute("do"));
     }
   }
 }
@@ -234,6 +295,7 @@ int main(int argc, char * argv[])
   auto input = parseInput(argc, argv);
 
   mitk::BeamformingSettings::Pointer bfSettings;
+  BandpassSettings bandpassSettings{5,10,1,1,1540};
   BModeSettings bmodeSettings{ mitk::PhotoacousticFilterService::BModeMethod::EnvelopeDetection, false };
   CropSettings cropSettings{ 0,0,0,0,0,0 };
   ResampleSettings resSettings{ 0.15 };
@@ -242,7 +304,7 @@ int main(int argc, char * argv[])
   MITK_INFO << "Parsing settings XML...";
   try
   {
-    ParseXML(input.settingsFile, input, &bfSettings, cropSettings, resSettings, bmodeSettings, processSettings);
+    ParseXML(input.settingsFile, input, &bfSettings, bandpassSettings, cropSettings, resSettings, bmodeSettings, processSettings);
   }
   catch (mitk::Exception e)
   {
@@ -275,6 +337,12 @@ int main(int argc, char * argv[])
     output = m_FilterService->ApplyBeamforming(output, bfSettings);
     MITK_INFO(input.verbose) << "Beamforming input image...[Done]";
   }
+  if (processSettings.DoBandpass)
+  {
+    MITK_INFO(input.verbose) << "Bandpassing input image...";
+    output = m_FilterService->ApplyBandpassFilter(output, bandpassSettings.highPass*1e6, bandpassSettings.lowPass*1e6, bandpassSettings.alphaHigh, bandpassSettings.alphaLow, 1, bandpassSettings.speedOfSound, true);
+    MITK_INFO(input.verbose) << "Bandpassing input image...[Done]";
+  }
   if (processSettings.DoCropping)
   {
     int err;
@@ -285,9 +353,14 @@ int main(int argc, char * argv[])
   }
   if (processSettings.DoResampling)
   {
-    double spacing[3] = {output->GetGeometry()->GetSpacing()[0], resSettings.spacing, output->GetGeometry()->GetSpacing()[2]};
+    double spacing[3] = {output->GetGeometry()->GetSpacing()[0]*output->GetDimension(0)/resSettings.dimX, resSettings.spacing, output->GetGeometry()->GetSpacing()[2]};
     MITK_INFO(input.verbose) << "Applying Resample filter to image...";
     output = m_FilterService->ApplyResampling(output, spacing);
+    if (output->GetDimension(0) != resSettings.dimX)
+    {
+      double dim[3] = {(double)resSettings.dimX, (double)output->GetDimension(1), (double)output->GetDimension(2)};
+      output = m_FilterService->ApplyResamplingToDim(output, dim);
+    }
     MITK_INFO(input.verbose) << "Applying Resample filter to image...[Done]";
   }
   if (processSettings.DoBmode)

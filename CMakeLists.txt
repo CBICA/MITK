@@ -128,7 +128,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
     message(FATAL_ERROR "Apple Clang version must be at least 5.0")
   endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-  # require at least Visual Studio 2015
+  # require at least Visual Studio 2017
   if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.10)
     message(FATAL_ERROR "Microsoft Visual Studio 2017 or newer required")
   endif()
@@ -217,6 +217,8 @@ if(MITK_USE_Qt5)
   set(MITK_QT5_COMPONENTS Concurrent OpenGL PrintSupport Script Sql Svg Widgets Xml XmlPatterns WebEngineWidgets UiTools Help LinguistTools)
   if(APPLE)
     list(APPEND MITK_QT5_COMPONENTS DBus)
+  elseif(UNIX)
+    list(APPEND MITK_QT5_COMPONENTS X11Extras)
   endif()
 
   # Hint at default install locations of Qt
@@ -225,29 +227,46 @@ if(MITK_USE_Qt5)
       set(_dir_candidates "C:/Qt")
 
       if(CMAKE_GENERATOR MATCHES "^Visual Studio [0-9]+ ([0-9]+)")
-        set(_compiler "msvc${CMAKE_MATCH_1}")
+        set(_compilers "msvc${CMAKE_MATCH_1}")
+      elseif(CMAKE_GENERATOR MATCHES "Ninja")
+        include(mitkFunctionGetMSVCVersion)
+        mitkFunctionGetMSVCVersion()
+        if(VISUAL_STUDIO_PRODUCT_NAME MATCHES "^Visual Studio ([0-9]+)")
+          set(_compilers "msvc${CMAKE_MATCH_1}")
+        endif()
+      endif()
+
+      if(_compilers MATCHES "[0-9]+")
+        if (CMAKE_MATCH_0 EQUAL 2019)
+          list(APPEND _compilers "msvc2017") # Binary compatible to 2019
+        endif()
       endif()
     else()
       set(_dir_candidates ~/Qt)
 
       if(APPLE)
-        set(_compiler clang)
+        set(_compilers clang)
       else()
         list(APPEND _dir_candidates /opt/Qt)
-        set(_compiler gcc)
+        set(_compilers gcc)
       endif()
     endif()
 
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(_compiler "${_compiler}_64")
+      foreach(_compiler ${_compilers})
+        list(APPEND _compilers64 "${_compiler}_64")
+      endforeach()
+      set(_compilers ${_compilers64})
     endif()
 
     foreach(_dir_candidate ${_dir_candidates})
       get_filename_component(_dir_candidate ${_dir_candidate} REALPATH)
-      set(_glob_expression "${_dir_candidate}/5.*/${_compiler}")
-      file(GLOB _hints ${_glob_expression})
-      list(SORT _hints)
-      list(APPEND MITK_QT5_HINTS ${_hints})
+      foreach(_compiler ${_compilers})
+        set(_glob_expression "${_dir_candidate}/5.*/${_compiler}")
+        file(GLOB _hints ${_glob_expression})
+        list(SORT _hints)
+        list(APPEND MITK_QT5_HINTS ${_hints})
+      endforeach()
     endforeach()
   endif()
 
@@ -718,12 +737,13 @@ if (OPENMP_FOUND)
 endif()
 
 if(WIN32)
-  set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} -D_WIN32_WINNT=0x0501 -DPOCO_NO_UNWINDOWS -DWIN32_LEAN_AND_MEAN -DNOMINMAX")
+  set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} -DPOCO_NO_UNWINDOWS -DWIN32_LEAN_AND_MEAN -DNOMINMAX")
   mitkFunctionCheckCompilerFlags("/wd4005" MITK_CXX_FLAGS) # warning C4005: macro redefinition
   mitkFunctionCheckCompilerFlags("/wd4231" MITK_CXX_FLAGS) # warning C4231: nonstandard extension used : 'extern' before template explicit instantiation
   # the following line should be removed after fixing bug 17637
   mitkFunctionCheckCompilerFlags("/wd4316" MITK_CXX_FLAGS) # warning C4316: object alignment on heap
   mitkFunctionCheckCompilerFlags("/wd4180" MITK_CXX_FLAGS) # warning C4180: qualifier applied to function type has no meaning
+  mitkFunctionCheckCompilerFlags("/wd4251" MITK_CXX_FLAGS) # warning C4251: 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
 endif()
 
 if(APPLE)

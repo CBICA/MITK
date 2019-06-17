@@ -79,6 +79,9 @@ set(MITK_MODULES
   ModelFitUI
   Pharmacokinetics
   PharmacokineticsUI
+  DICOMPM
+  REST
+  RESTService
 )
 
 if(MITK_ENABLE_PIC_READER)

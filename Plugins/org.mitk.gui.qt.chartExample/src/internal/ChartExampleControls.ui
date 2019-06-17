@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>455</width>
-    <height>1135</height>
+    <height>1054</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -37,7 +37,7 @@
         <x>0</x>
         <y>0</y>
         <width>420</width>
-        <height>417</height>
+        <height>436</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -248,14 +248,24 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="m_lineEditPieDataLabel">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
           <widget class="QLabel" name="label_2">
            <property name="text">
             <string>Chart type</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
+         <item row="4" column="1">
           <widget class="QComboBox" name="m_comboBoxChartType">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -280,6 +290,11 @@
            </item>
            <item>
             <property name="text">
+             <string>pie</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
              <string>spline</string>
             </property>
            </item>
@@ -295,14 +310,14 @@
            </item>
           </widget>
          </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_7">
+         <item row="5" column="0">
+          <widget class="QLabel" name="m_labelColor">
            <property name="text">
             <string>Color</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
+         <item row="5" column="1">
           <widget class="QLineEdit" name="m_lineEditColor">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -312,14 +327,14 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_8">
+         <item row="6" column="0">
+          <widget class="QLabel" name="m_labelLineStyle">
            <property name="text">
             <string>Line style</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="1">
+         <item row="6" column="1">
           <widget class="QComboBox" name="m_comboBoxLineStyle">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -339,6 +354,13 @@
            </item>
           </widget>
          </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="m_labelPieData">
+           <property name="text">
+            <string>pie data label</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item>
@@ -356,7 +378,7 @@
         <x>0</x>
         <y>0</y>
         <width>437</width>
-        <height>241</height>
+        <height>236</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -385,7 +407,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QLineEdit" name="title"/>
+          <widget class="QLineEdit" name="m_lineEditTitle"/>
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_3">
@@ -428,7 +450,7 @@
            </item>
           </widget>
          </item>
-         <item row="4" column="0">
+         <item row="5" column="0">
           <widget class="QCheckBox" name="m_checkBoxShowLegend">
            <property name="text">
             <string>Show legend</string>
@@ -438,14 +460,14 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0">
+         <item row="6" column="0">
           <widget class="QCheckBox" name="m_checkBoxStackedData">
            <property name="text">
             <string>Stacked data</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="0">
+         <item row="7" column="0">
           <widget class="QCheckBox" name="m_checkBoxShowDataPoints">
            <property name="text">
             <string>Show data points</string>
@@ -455,16 +477,106 @@
            </property>
           </widget>
          </item>
-         <item row="7" column="0">
+         <item row="8" column="0">
           <widget class="QCheckBox" name="m_checkBoxShowSubchart">
            <property name="text">
             <string>Show Subchart</string>
            </property>
           </widget>
          </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>Legend position</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QComboBox" name="m_comboBoxLegendPosition">
+           <property name="currentIndex">
+            <number>2</number>
+           </property>
+           <item>
+            <property name="text">
+             <string>bottom middle</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>bottom right</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>top right</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>top left</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>middle right</string>
+            </property>
+           </item>
+          </widget>
+         </item>
         </layout>
        </item>
       </layout>
+     </widget>
+     <widget class="QWidget" name="page_3">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>437</width>
+        <height>187</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>Zoom</string>
+      </attribute>
+      <widget class="QWidget" name="gridLayoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>431</width>
+         <height>121</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>x:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_15">
+          <property name="text">
+           <string>y:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QDoubleSpinBox" name="m_doubleSpinBox_minZoomX"/>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="m_doubleSpinBox_minZoomY"/>
+        </item>
+        <item row="0" column="2">
+         <widget class="QDoubleSpinBox" name="m_doubleSpinBox_maxZoomX"/>
+        </item>
+        <item row="1" column="2">
+         <widget class="QDoubleSpinBox" name="m_doubleSpinBox_maxZoomY"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </widget>
    </item>
@@ -475,6 +587,16 @@
      </property>
      <property name="text">
       <string>Create chart</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="m_buttonUpdateChart">
+     <property name="toolTip">
+      <string>Do image processing</string>
+     </property>
+     <property name="text">
+      <string>Update chart</string>
      </property>
     </widget>
    </item>
