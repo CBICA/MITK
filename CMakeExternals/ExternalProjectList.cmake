@@ -24,12 +24,12 @@ mitkFunctionAddExternalProject(NAME BetData     OFF ADVANCED)
 mitkFunctionAddExternalProject(NAME SWIG      OFF ADVANCED NO_PACKAGE DEPENDS PCRE)
 mitkFunctionAddExternalProject(NAME Python    OFF          NO_PACKAGE DEPENDS SWIG DOC "Use Python wrapping in MITK")
 mitkFunctionAddExternalProject(NAME Numpy     OFF ADVANCED NO_PACKAGE)
-mitkFunctionAddExternalProject(NAME OpenCV    OFF)
+mitkFunctionAddExternalProject(NAME OpenCV    ON DEPENDS Eigen)
 mitkFunctionAddExternalProject(NAME Vigra     OFF          DEPENDS HDF5)
 
 # These are "hard" dependencies and always set to ON
-mitkFunctionAddExternalProject(NAME ITK       ON           NO_CACHE DEPENDS HDF5)
 mitkFunctionAddExternalProject(NAME VTK       ON           NO_CACHE)
+mitkFunctionAddExternalProject(NAME ITK       ON           NO_CACHE DEPENDS HDF5 VTK OpenCV)
 mitkFunctionAddExternalProject(NAME Boost     ON           NO_CACHE)
 
 mitkFunctionAddExternalProject(NAME SimpleITK OFF          DEPENDS ITK GDCM SWIG)

@@ -12,7 +12,7 @@ if(MITK_USE_OpenCV)
   set(proj OpenCV)
   set(proj_DEPENDENCIES)
   set(OpenCV_DEPENDS ${proj})
-
+  
   if(NOT DEFINED OpenCV_DIR)
 
     set(additional_cmake_args
@@ -81,7 +81,7 @@ if(MITK_USE_OpenCV)
         -DWITH_IPP:BOOL=OFF
         -DBUILD_IPP_IW:BOOL=OFF
         -DWITH_EIGEN:BOOL=TRUE # [Eigen] dependency, enables better matrix operations 
-        -DEIGEN_INCLUDE_PATH:STRING=${Eigen_DIR}/Eigen        
+        #-DEIGEN_INCLUDE_PATH:STRING=${Eigen_DIR}        
         -DWITH_OPENMP:BOOL=ON
         ${additional_cmake_args}
       CMAKE_CACHE_ARGS
