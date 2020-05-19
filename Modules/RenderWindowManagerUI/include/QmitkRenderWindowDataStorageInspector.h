@@ -1,21 +1,17 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef QMITKRENDERWINDOWDATASTORAGEINSPECTOR_H
-#define QMITKRENDERWINDOWDATASTORAGEWINSPECTOR_H
+#define QMITKRENDERWINDOWDATASTORAGEINSPECTOR_H
 
 // render window manager UI module
 #include "MitkRenderWindowManagerUIExports.h"
@@ -24,7 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 // render window manager module
 #include <mitkRenderWindowLayerController.h>
 #include <mitkRenderWindowViewDirectionController.h>
-#include <QmitkRenderWindowDataStorageListModel.h>
+#include <QmitkRenderWindowDataStorageTreeModel.h>
 
 // qt widgets module
 #include <QmitkAbstractDataStorageInspector.h>
@@ -47,19 +43,19 @@ public:
   /**
   * @brief See 'QmitkAbstractDataStorageInspector'
   */
-  virtual QAbstractItemView* GetView() override;
+  QAbstractItemView* GetView() override;
   /**
   * @brief See 'QmitkAbstractDataStorageInspector'
   */
-  virtual const QAbstractItemView* GetView() const override;
+  const QAbstractItemView* GetView() const override;
   /**
   * @brief See 'QmitkAbstractDataStorageInspector'
   */
-  virtual void SetSelectionMode(SelectionMode mode) override;
+  void SetSelectionMode(SelectionMode mode) override;
   /**
   * @brief See 'QmitkAbstractDataStorageInspector'
   */
-  virtual SelectionMode GetSelectionMode() const override;
+  SelectionMode GetSelectionMode() const override;
   /**
   * @brief Set the controlled base renderer.
   */
@@ -73,6 +69,8 @@ public:
 
 private Q_SLOTS:
 
+  void ModelRowsInserted(const QModelIndex& parent, int start, int end);
+
   void SetAsBaseLayer();
 
   void ResetRenderer();
@@ -81,12 +79,12 @@ private Q_SLOTS:
 
 private:
 
-  virtual void Initialize() override;
+  void Initialize() override;
   void SetUpConnections();
 
   Ui::QmitkRenderWindowDataStorageInspector m_Controls;
 
-  std::unique_ptr<QmitkRenderWindowDataStorageListModel> m_StorageModel;
+  std::unique_ptr<QmitkRenderWindowDataStorageTreeModel> m_StorageModel;
   std::unique_ptr<mitk::RenderWindowLayerController> m_RenderWindowLayerController;
   std::unique_ptr<mitk::RenderWindowViewDirectionController> m_RenderWindowViewDirectionController;
 };

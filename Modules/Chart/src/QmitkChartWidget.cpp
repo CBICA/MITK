@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #include <regex>
 
@@ -29,11 +25,11 @@ See LICENSE.txt or http://www.mitk.org for details.
 class CustomPage : public QWebEnginePage
 {
 public:
-  CustomPage(QObject *parent = 0) : QWebEnginePage(parent) {}
+  CustomPage(QObject *parent = nullptr) : QWebEnginePage(parent) {}
   virtual void javaScriptConsoleMessage(JavaScriptConsoleMessageLevel /*level*/,
                                         const QString &message,
                                         int lineNumber,
-                                        const QString & /*sourceID*/)
+                                        const QString & /*sourceID*/) override
   {
     MITK_INFO << "JS > " << lineNumber << ": " << message.toStdString();
   }
@@ -49,20 +45,39 @@ public:
   Impl &operator=(const Impl &) = delete;
 
   void AddData1D(const std::vector<double> &data1D, const std::string &label, QmitkChartWidget::ChartType chartType);
-  void AddData2D(const std::map<double, double> &data2D,
+  void AddData2D(const std::vector< std::pair<double, double> > &data2D,
                  const std::string &label,
                  QmitkChartWidget::ChartType chartType);
+
+  void AddChartExampleData(const std::vector< std::pair<double, double> >& data2D,
+                           const std::string& label,
+                           const std::string& type,
+                           const std::string& color,
+                           const std::string& style,
+                           const std::string& pieLabelsData = 0);
+
   void UpdateData1D(const std::vector<double> &data1D, const std::string &label);
-  void UpdateData2D(const std::map<double, double> &data2D, const std::string &label);
+  void UpdateData2D(const std::vector< std::pair<double, double> > &data2D, const std::string &label);
+  void UpdateChartExampleData(const std::vector< std::pair<double, double> >& data2D,
+                              const std::string& label,
+                              const std::string& type,
+                              const std::string& color,
+                              const std::string& lineStyle,
+                              const std::string& pieLabelsData = 0);
 
   void RemoveData(const std::string &label);
 
   void UpdateLabel(const std::string &existingLabel, const std::string &newLabel);
 
+  QmitkChartxyData* GetDataElementByLabel(const std::string& label) const;
+
   void ClearData();
 
   void SetColor(const std::string &label, const std::string &colorName);
+
   void SetLineStyle(const std::string &label, LineStyle style);
+
+  void SetMarkerSymbol(const std::string &label, MarkerSymbol symbol);
 
   void SetYAxisScale(AxisScale scale);
 
@@ -112,10 +127,11 @@ public:
 
   QSize sizeHint() const;
 
+  void GetImageUrl();
+
 private:
   using ChartxyDataVector = std::vector<std::unique_ptr<QmitkChartxyData>>;
   std::string GetUniqueLabelName(const QList<QVariant> &labelList, const std::string &label) const;
-  QmitkChartxyData *GetDataElementByLabel(const std::string &label) const;
   QList<QVariant> GetDataLabels(const ChartxyDataVector &c3xyData) const;
 
   QWebChannel *m_WebChannel;
@@ -124,16 +140,13 @@ private:
   QmitkChartData m_C3Data;
   ChartxyDataVector m_C3xyData;
   std::map<QmitkChartWidget::ChartType, std::string> m_ChartTypeToName;
+  std::map<QmitkChartWidget::ChartColor, std::string> m_ChartColorToName;
   std::map<QmitkChartWidget::ColorTheme, std::string> m_ColorThemeToName;
   std::map<QmitkChartWidget::LegendPosition, std::string> m_LegendPositionToName;
   std::map<QmitkChartWidget::LineStyle, std::string> m_LineStyleToName;
+  std::map<QmitkChartWidget::MarkerSymbol, std::string> m_MarkerSymbolToName;
   std::map<QmitkChartWidget::AxisScale, std::string> m_AxisScaleToName;
 };
-
-std::string QmitkChartWidget::Impl::GetThemeName() const
-{
-  return m_C3Data.GetThemeName().toString().toStdString();
-}
 
 QmitkChartWidget::Impl::Impl(QWidget *parent)
   : m_WebChannel(new QWebChannel(parent)), m_WebEngineView(new QWebEngineView(parent))
@@ -162,6 +175,31 @@ QmitkChartWidget::Impl::Impl(QWidget *parent)
   m_ChartTypeToName.emplace(ChartType::area_spline, "area-spline");
   m_ChartTypeToName.emplace(ChartType::scatter, "scatter");
 
+  m_ChartColorToName.emplace(ChartColor::red, "red");
+  m_ChartColorToName.emplace(ChartColor::orange, "orange");
+  m_ChartColorToName.emplace(ChartColor::yellow, "yellow");
+  m_ChartColorToName.emplace(ChartColor::green, "green");
+  m_ChartColorToName.emplace(ChartColor::blue, "blue");
+  m_ChartColorToName.emplace(ChartColor::purple, "purple");
+  m_ChartColorToName.emplace(ChartColor::brown, "brown");
+  m_ChartColorToName.emplace(ChartColor::magenta, "magenta");
+  m_ChartColorToName.emplace(ChartColor::tan, "tan");
+  m_ChartColorToName.emplace(ChartColor::cyan, "cyan");
+  m_ChartColorToName.emplace(ChartColor::olive, "olive");
+  m_ChartColorToName.emplace(ChartColor::maroon, "maroon");
+  m_ChartColorToName.emplace(ChartColor::navy, "navy");
+  m_ChartColorToName.emplace(ChartColor::aquamarine, "aquamarine");
+  m_ChartColorToName.emplace(ChartColor::turqouise, "turqouise");
+  m_ChartColorToName.emplace(ChartColor::silver, "silver");
+  m_ChartColorToName.emplace(ChartColor::lime, "lime");
+  m_ChartColorToName.emplace(ChartColor::teal, "teal");
+  m_ChartColorToName.emplace(ChartColor::indigo, "indigo");
+  m_ChartColorToName.emplace(ChartColor::violet, "violet");
+  m_ChartColorToName.emplace(ChartColor::pink, "pink");
+  m_ChartColorToName.emplace(ChartColor::black, "black");
+  m_ChartColorToName.emplace(ChartColor::white, "white");
+  m_ChartColorToName.emplace(ChartColor::grey, "grey");
+
   m_LegendPositionToName.emplace(LegendPosition::bottomMiddle, "bottomMiddle");
   m_LegendPositionToName.emplace(LegendPosition::bottomRight, "bottomRight");
   m_LegendPositionToName.emplace(LegendPosition::topRight, "topRight");
@@ -171,6 +209,22 @@ QmitkChartWidget::Impl::Impl(QWidget *parent)
   m_LineStyleToName.emplace(LineStyle::solid, "solid");
   m_LineStyleToName.emplace(LineStyle::dashed, "dashed");
 
+  m_MarkerSymbolToName.emplace(MarkerSymbol::circle, "circle");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::cross, "cross");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::diamond, "diamond");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::pentagon, "pentagon");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::square, "square");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::star, "star");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::x, "x");
+
+  m_MarkerSymbolToName.emplace(MarkerSymbol::diamond_tall, "diamond-tall");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::star_diamond, "star-diamond");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::star_triangle_up, "star-triangle-up");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::star_triangle_down, "star-triangle-down");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::asterisk, "asterisk");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::cross_thin, "cross-thin");
+  m_MarkerSymbolToName.emplace(MarkerSymbol::x_thin, "x-thin");
+
   m_AxisScaleToName.emplace(AxisScale::linear, "");
   m_AxisScaleToName.emplace(AxisScale::log, "log");
 
@@ -179,6 +233,11 @@ QmitkChartWidget::Impl::Impl(QWidget *parent)
 }
 
 QmitkChartWidget::Impl::~Impl() {}
+
+std::string QmitkChartWidget::Impl::GetThemeName() const
+{
+  return m_C3Data.GetThemeName().toString().toStdString();
+}
 
 std::string CheckForCorrectHex(const std::string &colorName)
 {
@@ -195,72 +254,154 @@ std::string CheckForCorrectHex(const std::string &colorName)
   }
 }
 
+void QmitkChartWidget::Impl::GetImageUrl()
+{
+  m_C3Data.EmitSignalImageUrl();
+}
+
 void QmitkChartWidget::Impl::AddData1D(const std::vector<double> &data1D,
                                        const std::string &label,
                                        QmitkChartWidget::ChartType type)
 {
-  std::map<double, double> transformedData2D;
+  std::vector< std::pair<double, double> > transformedData2D;
   unsigned int count = 0;
   // transform the 1D data to 2D data
   for (const auto &ele : data1D)
   {
-    transformedData2D[count] = ele;
+    transformedData2D.emplace_back(count, ele);
     count++;
   }
 
   AddData2D(transformedData2D, label, type);
 }
 
-void QmitkChartWidget::Impl::AddData2D(const std::map<double, double> &data2D,
+void QmitkChartWidget::Impl::AddData2D(const std::vector< std::pair<double, double> > &data2D,
                                        const std::string &label,
                                        QmitkChartWidget::ChartType type)
 {
-  QMap<QVariant, QVariant> data2DConverted;
-  for (const auto &aValue : data2D)
-  {
-    data2DConverted.insert(aValue.first, aValue.second);
-  }
   const std::string chartTypeName(m_ChartTypeToName.at(type));
 
   auto definedLabels = GetDataLabels(m_C3xyData);
   auto uniqueLabel = GetUniqueLabelName(definedLabels, label);
-  if (type == ChartType::scatter)
-  {
-    SetShowDataPoints(true);
-    MITK_INFO << "Enabling data points for all because of scatter plot";
-  }
+
   unsigned int sizeOfC3xyData = static_cast<unsigned int>(m_C3xyData.size());
-  m_C3xyData.push_back(std::make_unique<QmitkChartxyData>(data2DConverted,
+  m_C3xyData.push_back(std::make_unique<QmitkChartxyData>(data2D,
                                                           QVariant(QString::fromStdString(uniqueLabel)),
                                                           QVariant(QString::fromStdString(chartTypeName)),
                                                           QVariant(sizeOfC3xyData)));
 }
 
+void QmitkChartWidget::Impl::AddChartExampleData(const std::vector< std::pair<double, double> >& data2D,
+                                                 const std::string& label,
+                                                 const std::string& type,
+                                                 const std::string& color,
+                                                 const std::string& lineStyle,
+                                                 const std::string& pieLabelsData)
+{
+  auto definedLabels = GetDataLabels(m_C3xyData);
+  auto uniqueLabel = GetUniqueLabelName(definedLabels, label);
+  if (type == "scatter")
+  {
+    SetShowDataPoints(true);
+    MITK_INFO << "Enabling data points for all because of scatter plot";
+  }
+  unsigned int sizeOfC3xyData = static_cast<unsigned int>(m_C3xyData.size());
+
+  std::unique_ptr<QmitkChartxyData> chartData =
+      std::make_unique<QmitkChartxyData>(
+        data2D,
+        QVariant(QString::fromStdString(uniqueLabel)),
+        QVariant(QString::fromStdString(type)),
+        QVariant(sizeOfC3xyData));
+
+  chartData->SetColor(QVariant(QString::fromStdString(color)));
+  chartData->SetLineStyle(QVariant(QString::fromStdString(lineStyle)));
+
+  if (pieLabelsData != "")
+  {
+    std::string pieLabelsDataWorkingString = pieLabelsData;
+
+    QList<QVariant> pieLabelsDataList;
+    while (pieLabelsDataWorkingString.size() != 0)
+    {
+      QVariant oneElement = QString::fromStdString(pieLabelsDataWorkingString.substr(0, pieLabelsDataWorkingString.find(";")));
+      pieLabelsDataList.push_back(oneElement);
+
+      if (pieLabelsDataWorkingString.find(";") != std::string::npos)
+      {
+        pieLabelsDataWorkingString.erase(0, pieLabelsDataWorkingString.find(";") + 1);
+      }
+      else
+      {
+        pieLabelsDataWorkingString.erase(pieLabelsDataWorkingString.begin(), pieLabelsDataWorkingString.end());
+      }
+    }
+
+    chartData->SetPieLabels(pieLabelsDataList);
+  }
+
+  m_C3xyData.push_back(std::move(chartData));
+}
+
 void QmitkChartWidget::Impl::UpdateData1D(const std::vector<double> &data1D, const std::string &label)
 {
-  std::map<double, double> transformedData2D;
+  std::vector< std::pair<double, double> > transformedData2D;
   unsigned int count = 0;
   // transform the 1D data to 2D data
   for (const auto &ele : data1D)
   {
-    transformedData2D[count] = ele;
+    transformedData2D.emplace_back( count, ele );
     count++;
   }
 
   UpdateData2D(transformedData2D, label);
 }
 
-void QmitkChartWidget::Impl::UpdateData2D(const std::map<double, double> &data2D, const std::string &label)
+void QmitkChartWidget::Impl::UpdateData2D(const std::vector< std::pair<double, double> > &data2D, const std::string &label)
 {
   auto element = GetDataElementByLabel(label);
   if (element)
+    element->SetData(data2D);
+}
+
+void QmitkChartWidget::Impl::UpdateChartExampleData(const std::vector< std::pair<double, double> >& data2D,
+                                                    const std::string& label,
+                                                    const std::string& type,
+                                                    const std::string& color,
+                                                    const std::string& lineStyle,
+                                                    const std::string& pieLabelsData)
+{
+  UpdateData2D(data2D, label);
+
+  auto element = GetDataElementByLabel(label);
+  if (element)
   {
-    QMap<QVariant, QVariant> data2DConverted;
-    for (const auto &aValue : data2D)
+    element->SetChartType(QString::fromStdString(type));
+    element->SetColor(QString::fromStdString(color));
+    element->SetLineStyle(QString::fromStdString(lineStyle));
+
+    if (pieLabelsData != "")
     {
-      data2DConverted.insert(aValue.first, aValue.second);
+      std::string pieLabelsDataWorkingString = pieLabelsData;
+
+      QList<QVariant> pieLabelsDataList;
+      while (pieLabelsDataWorkingString.size() != 0)
+      {
+        QVariant oneElement = QString::fromStdString(pieLabelsDataWorkingString.substr(0, pieLabelsDataWorkingString.find(";")));
+        pieLabelsDataList.push_back(oneElement);
+
+        if (pieLabelsDataWorkingString.find(";") != std::string::npos)
+        {
+          pieLabelsDataWorkingString.erase(0, pieLabelsDataWorkingString.find(";") + 1);
+        }
+        else
+        {
+          pieLabelsDataWorkingString.erase(pieLabelsDataWorkingString.begin(), pieLabelsDataWorkingString.end());
+        }
+      }
+
+      element->SetPieLabels(pieLabelsDataList);
     }
-    element->SetData(data2DConverted);
   }
 }
 
@@ -284,6 +425,7 @@ void QmitkChartWidget::Impl::ClearData()
   {
     m_WebChannel->deregisterObject(xyData.get());
   }
+
   m_C3xyData.clear();
 }
 
@@ -314,6 +456,13 @@ void QmitkChartWidget::Impl::SetLineStyle(const std::string &label, LineStyle st
   element->SetLineStyle(QVariant(QString::fromStdString(lineStyleName)));
 }
 
+void QmitkChartWidget::Impl::SetMarkerSymbol(const std::string &label, MarkerSymbol symbol)
+{
+  auto element = GetDataElementByLabel(label);
+  const std::string markerSymbolName(m_MarkerSymbolToName.at(symbol));
+  element->SetMarkerSymbol(QVariant(QString::fromStdString(markerSymbolName)));
+}
+
 void QmitkChartWidget::Impl::SetYAxisScale(AxisScale scale)
 {
   const std::string axisScaleName(m_AxisScaleToName.at(scale));
@@ -329,7 +478,6 @@ QmitkChartxyData *QmitkChartWidget::Impl::GetDataElementByLabel(const std::strin
       return qmitkChartxyData.get();
     }
   }
-  MITK_WARN << "label " << label << " not found in QmitkChartWidget";
   return nullptr;
 }
 
@@ -398,6 +546,7 @@ void QmitkChartWidget::Impl::Show(bool showSubChart)
   {
     MITK_WARN << "no data available for display in chart";
   }
+
   else
   {
     m_C3Data.SetAppearance(showSubChart, m_C3xyData.front()->GetChartType() == QVariant("pie"));
@@ -577,12 +726,6 @@ QmitkChartWidget::QmitkChartWidget(QWidget *parent) : QWidget(parent), m_Impl(ne
 }
 
 QmitkChartWidget::~QmitkChartWidget() {}
-
-void QmitkChartWidget::AddData2D(const std::map<double, double> &data2D, const std::string &label, ChartType type)
-{
-  m_Impl->AddData2D(data2D, label, type);
-}
-
 void QmitkChartWidget::SetColor(const std::string &label, const std::string &colorName)
 {
   m_Impl->SetColor(label, colorName);
@@ -591,6 +734,11 @@ void QmitkChartWidget::SetColor(const std::string &label, const std::string &col
 void QmitkChartWidget::SetLineStyle(const std::string &label, LineStyle style)
 {
   m_Impl->SetLineStyle(label, style);
+}
+
+void QmitkChartWidget::SetMarkerSymbol(const std::string &label, MarkerSymbol symbol)
+{
+  m_Impl->SetMarkerSymbol(label, symbol);
 }
 
 void QmitkChartWidget::SetYAxisScale(AxisScale scale)
@@ -603,14 +751,39 @@ void QmitkChartWidget::AddData1D(const std::vector<double> &data1D, const std::s
   m_Impl->AddData1D(data1D, label, type);
 }
 
+void QmitkChartWidget::AddData2D(const std::vector< std::pair<double, double> >& data2D, const std::string& label, ChartType type)
+{
+  m_Impl->AddData2D(data2D, label, type);
+}
+
+void QmitkChartWidget::AddChartExampleData(const std::vector< std::pair<double, double> >& data2D,
+                                           const std::string& label,
+                                           const std::string& type,
+                                           const std::string& color,
+                                           const std::string& lineStyle,
+                                           const std::string& pieLabelsData)
+{
+  m_Impl->AddChartExampleData(data2D, label, type, color, lineStyle, pieLabelsData);
+}
+
 void QmitkChartWidget::UpdateData1D(const std::vector<double> &data1D, const std::string &label)
 {
   m_Impl->UpdateData1D(data1D, label);
 }
 
-void QmitkChartWidget::UpdateData2D(const std::map<double, double> &data2D, const std::string &label)
+void QmitkChartWidget::UpdateData2D(const std::vector< std::pair<double, double> > &data2D, const std::string &label)
 {
   m_Impl->UpdateData2D(data2D, label);
+}
+
+void QmitkChartWidget::UpdateChartExampleData(const std::vector< std::pair<double, double> >& data2D,
+                                              const std::string& label,
+                                              const std::string& type,
+                                              const std::string& color,
+                                              const std::string& lineStyle,
+                                              const std::string& pieLabelsData)
+{
+  m_Impl->UpdateChartExampleData(data2D, label, type, color, lineStyle, pieLabelsData);
 }
 
 void QmitkChartWidget::RemoveData(const std::string &label)
@@ -620,6 +793,11 @@ void QmitkChartWidget::RemoveData(const std::string &label)
 
 void QmitkChartWidget::UpdateLabel(const std::string &existingLabel, const std::string &newLabel) {
   m_Impl->UpdateLabel(existingLabel, newLabel);
+}
+
+QmitkChartxyData* QmitkChartWidget::GetDataElementByLabel(const std::string& label) const
+{
+  return m_Impl->GetDataElementByLabel(label);
 }
 
 void QmitkChartWidget::SetXAxisLabel(const std::string &label)
@@ -750,4 +928,9 @@ void QmitkChartWidget::Reload()
 QSize QmitkChartWidget::sizeHint() const
 {
   return m_Impl->sizeHint();
+}
+
+void QmitkChartWidget::SavePlotAsImage()
+{
+  m_Impl->GetImageUrl();
 }

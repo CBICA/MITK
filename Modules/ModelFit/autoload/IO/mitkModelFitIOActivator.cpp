@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 
 #include <usModuleActivator.h>
@@ -35,27 +31,31 @@ class ModelFitIOActivator : public us::ModuleActivator
 public:
   void registerProperty(const std::string& name, const std::string& key, const std::string& description)
   {
-    mitk::CoreServices::GetPropertyDescriptions()->AddDescription(name, description);
+    mitk::CoreServicePointer<mitk::IPropertyDescriptions> propDescService(mitk::CoreServices::GetPropertyDescriptions());
+    propDescService->AddDescription(name, description);
 
     mitk::PropertyPersistenceInfo::Pointer ppi = mitk::PropertyPersistenceInfo::New();
     ppi->SetNameAndKey(name, key);
 
-    mitk::CoreServices::GetPropertyPersistence()->AddInfo(ppi, true);
+    mitk::CoreServicePointer<mitk::IPropertyPersistence> propPersistenceService(mitk::CoreServices::GetPropertyPersistence());
+    propPersistenceService->AddInfo(ppi, true);
   }
 
   void registerProperty(const std::string& name, const std::string& key, const std::string& description, const PropertyPersistenceInfo::DeserializationFunctionType &deFnc, const PropertyPersistenceInfo::SerializationFunctionType &serFnc)
   {
-    mitk::CoreServices::GetPropertyDescriptions()->AddDescription(name, description);
+    mitk::CoreServicePointer<mitk::IPropertyDescriptions> propDescService(mitk::CoreServices::GetPropertyDescriptions());
+    propDescService->AddDescription(name, description);
 
     mitk::PropertyPersistenceInfo::Pointer ppi = mitk::PropertyPersistenceInfo::New();
     ppi->SetNameAndKey(name, key);
     ppi->SetDeserializationFunction(deFnc);
     ppi->SetSerializationFunction(serFnc);
 
-    mitk::CoreServices::GetPropertyPersistence()->AddInfo(ppi, true);
+    mitk::CoreServicePointer<mitk::IPropertyPersistence> propPersistenceService(mitk::CoreServices::GetPropertyPersistence());
+    propPersistenceService->AddInfo(ppi, true);
   }
 
-  void Load(us::ModuleContext* /*context*/)
+  void Load(us::ModuleContext* /*context*/) override
   {
     //register relevant properties
     registerProperty(mitk::ModelFitConstants::UID_PROPERTY_NAME(), "data_uid", "UID used to identify data in an MITK session.");
@@ -88,7 +88,7 @@ public:
     registerProperty(mitk::ModelFitConstants::FIT_STATIC_PARAMETERS_PROPERTY_NAME(), "modelfit_fit_staticParameters", "Value identifies the model type.", PropertyPersistenceDeserialization::deserializeXMLToScalarListLookupTableProperty, PropertyPersistenceSerialization::serializeScalarListLookupTablePropertyToXML);
   }
 
-  void Unload(us::ModuleContext* )
+  void Unload(us::ModuleContext* ) override
   {
   }
 

@@ -1,3 +1,15 @@
+/*============================================================================
+
+The Medical Imaging Interaction Toolkit (MITK)
+
+Copyright (c) German Cancer Research Center (DKFZ)
+All rights reserved.
+
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
+
+============================================================================*/
+
 #ifndef mitkGIFNeighbouringGreyLevelDependenceFeatures_h
 #define mitkGIFNeighbouringGreyLevelDependenceFeatures_h
 
@@ -19,7 +31,7 @@ namespace mitk
   * around each feature is calculated and the number of voxels within the neighbourhood that
   * are greater than the center voxel plus \f$ \alpha \f$ is counted. This is called the
   * number of dependence voxels. The matrix gives the
-  * number of voxels with an intesity \f$ x \f$ and $\f d \f$ dependence neighbourhood voxels.
+  * number of voxels with an intesity \f$ x \f$ and \f$ d \f$ dependence neighbourhood voxels.
   *
   * The image is quantified prior to the calculation of the features. This reduces the number of
   * available intensity values. Instead of using the pure intensity value, the features are
@@ -104,31 +116,31 @@ namespace mitk
   class MITKCLUTILITIES_EXPORT GIFNeighbouringGreyLevelDependenceFeature : public AbstractGlobalImageFeature
   {
     public:
-      mitkClassMacro(GIFNeighbouringGreyLevelDependenceFeature, AbstractGlobalImageFeature)
-      itkFactorylessNewMacro(Self)
-      itkCloneMacro(Self)
+      mitkClassMacro(GIFNeighbouringGreyLevelDependenceFeature, AbstractGlobalImageFeature);
+      itkFactorylessNewMacro(Self);
+      itkCloneMacro(Self);
 
       GIFNeighbouringGreyLevelDependenceFeature();
 
       /**
       * \brief Calculates the Cooccurence-Matrix based features for this class.
       */
-      virtual FeatureListType CalculateFeatures(const Image::Pointer & image, const Image::Pointer &feature) override;
+      FeatureListType CalculateFeatures(const Image::Pointer & image, const Image::Pointer &feature) override;
 
       /**
       * \brief Returns a list of the names of all features that are calculated from this class
       */
-      virtual FeatureNameListType GetFeatureNames() override;
+      FeatureNameListType GetFeatureNames() override;
 
-      virtual std::string GetCurrentFeatureEncoding() override;
+      std::string GetCurrentFeatureEncoding() override;
 
       itkGetConstMacro(Range,double);
       itkSetMacro(Range, double);
     itkGetConstMacro(Alpha, int);
     itkSetMacro(Alpha, int);
 
-    virtual void CalculateFeaturesUsingParameters(const Image::Pointer & feature, const Image::Pointer &mask, const Image::Pointer &maskNoNAN, FeatureListType &featureList);
-    virtual void AddArguments(mitkCommandLineParser &parser);
+    void CalculateFeaturesUsingParameters(const Image::Pointer & feature, const Image::Pointer &mask, const Image::Pointer &maskNoNAN, FeatureListType &featureList) override;
+    void AddArguments(mitkCommandLineParser &parser) override;
 
 
     struct GIFNeighbouringGreyLevelDependenceFeatureConfiguration

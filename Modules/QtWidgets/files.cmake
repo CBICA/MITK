@@ -2,9 +2,12 @@ file(GLOB_RECURSE H_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURREN
 
 set(CPP_FILES
   QmitkAbstractDataStorageModel.cpp
+  QmitkAbstractMultiWidget.cpp
+  QmitkAbstractNodeSelectionWidget.cpp
   QmitkApplicationCursor.cpp
   QmitkDataStorageComboBox.cpp
   QmitkDataStorageDefaultListModel.cpp
+  QmitkDataStorageHistoryModel.cpp
   QmitkDataStorageListModel.cpp
   QmitkDataStorageTableModel.cpp
   QmitkDataStorageSimpleTreeModel.cpp
@@ -25,6 +28,7 @@ set(CPP_FILES
   QmitkMouseModeSwitcher.cpp
   QmitkMimeTypes.cpp
   QmitkMultiWidgetConfigurationToolBar.cpp
+  QmitkMultiWidgetLayoutManager.cpp
   QmitkMultiWidgetLayoutSelectionWidget.cpp
   QmitkNodeDescriptor.cpp
   QmitkColoredNodeDescriptor.cpp
@@ -50,18 +54,23 @@ set(CPP_FILES
   QmitkPropertyItemModel.cpp
   QmitkStyleManager.cpp
   QmitkAbstractDataStorageInspector.cpp
+  QmitkDataStorageFavoriteNodesInspector.cpp
   QmitkDataStorageListInspector.cpp
   QmitkDataStorageTreeInspector.cpp
+  QmitkDataStorageSelectionHistoryInspector.cpp
   QmitkModelViewSelectionConnector.cpp
   mitkIDataStorageInspectorProvider.cpp
   mitkQtWidgetsActivator.cpp
   mitkDataStorageInspectorGenerator.cpp
   QmitkOverlayWidget.cpp
+  QmitkSimpleTextOverlayWidget.cpp
   QmitkNodeDetailsDialog.cpp
 )
 
 set(MOC_H_FILES
   include/QmitkAbstractDataStorageModel.h
+  include/QmitkAbstractMultiWidget.h
+  include/QmitkAbstractNodeSelectionWidget.h
   include/QmitkDataStorageComboBox.h
   include/QmitkDataStorageTableModel.h
   include/QmitkDataStorageTreeModel.h
@@ -80,6 +89,7 @@ set(MOC_H_FILES
   include/QmitkMemoryUsageIndicatorView.h
   include/QmitkMouseModeSwitcher.h
   include/QmitkMultiWidgetConfigurationToolBar.h
+  include/QmitkMultiWidgetLayoutManager.h
   include/QmitkMultiWidgetLayoutSelectionWidget.h
   include/QmitkNodeDescriptor.h
   include/QmitkColoredNodeDescriptor.h
@@ -98,11 +108,15 @@ set(MOC_H_FILES
   include/QmitkDataStorageComboBoxWithSelectNone.h
   include/QmitkPropertyItemDelegate.h
   include/QmitkPropertyItemModel.h
-  include/QmitkDataStorageListInspector.h
   include/QmitkAbstractDataStorageInspector.h
+  include/QmitkDataStorageFavoriteNodesInspector.h
+  include/QmitkDataStorageListInspector.h
   include/QmitkDataStorageTreeInspector.h
+  include/QmitkDataStorageHistoryModel.h
+  include/QmitkDataStorageSelectionHistoryInspector.h
   include/QmitkModelViewSelectionConnector.h
   include/QmitkOverlayWidget.h
+  include/QmitkSimpleTextOverlayWidget.h
   include/QmitkNodeDetailsDialog.h
 )
 
@@ -117,6 +131,7 @@ set(UI_FILES
   src/QmitkServiceListWidgetControls.ui
   src/QmitkDataStorageListInspector.ui
   src/QmitkDataStorageTreeInspector.ui
+  src/QmitkDataStorageSelectionHistoryInspector.ui
 )
 
 set(QRC_FILES

@@ -82,6 +82,15 @@ function(mitk_create_plugin)
     return()
   endif()
 
+  foreach(_module_dep ${_PLUGIN_MODULE_DEPENDS})
+    if(TARGET ${_module_dep})
+      get_target_property(AUTLOAD_DEP ${_module_dep} MITK_AUTOLOAD_DIRECTORY)
+      if (AUTLOAD_DEP)
+        message(SEND_ERROR "Plugin \"${PROJECT_NAME}\" has an invalid dependency on autoload module \"${_module_dep}\". Check MITK_CREATE_PLUGIN usage for \"${PROJECT_NAME}\".")
+      endif()
+    endif()
+  endforeach()
+
   # -------------- All dependencies are resolved ------------------
 
   message(STATUS "Creating CTK plugin ${PROJECT_NAME}")
@@ -199,6 +208,18 @@ function(mitk_create_plugin)
 
   set_property(TARGET ${PLUGIN_TARGET} APPEND PROPERTY COMPILE_DEFINITIONS US_MODULE_NAME=${PLUGIN_TARGET})
   set_property(TARGET ${PLUGIN_TARGET} PROPERTY US_MODULE_NAME ${PLUGIN_TARGET})
+
+  if(NOT CMAKE_CURRENT_SOURCE_DIR MATCHES "^${CMAKE_SOURCE_DIR}.*")
+    foreach(MITK_EXTENSION_DIR ${MITK_EXTENSION_DIRS})
+      if(CMAKE_CURRENT_SOURCE_DIR MATCHES "^${MITK_EXTENSION_DIR}.*")
+        get_filename_component(MITK_EXTENSION_ROOT_FOLDER ${MITK_EXTENSION_DIR} NAME)
+        set_property(TARGET ${PLUGIN_TARGET} PROPERTY FOLDER "${MITK_EXTENSION_ROOT_FOLDER}/Plugins")
+        break()
+      endif()
+    endforeach()
+  else()
+    set_property(TARGET ${PLUGIN_TARGET} PROPERTY FOLDER "${MITK_ROOT_FOLDER}/Plugins")
+  endif()
 
   set(plugin_c_flags)
   set(plugin_cxx_flags)

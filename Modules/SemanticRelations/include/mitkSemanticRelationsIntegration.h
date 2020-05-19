@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef MITKSEMANTICRELATIONSINTEGRATION_H
 #define MITKSEMANTICRELATIONSINTEGRATION_H
@@ -41,7 +37,7 @@ namespace mitk
   *   In order for most functions to work the case ID has to be used as a parameter.
   *   If not, these functions do nothing.
   *
-  *   The class implements the ISemanticRelationsObservable interface to allow observers to 
+  *   The class implements the ISemanticRelationsObservable interface to allow observers to
   *   be informed about changes in the semantic relation storage.
   */
   class MITKSEMANTICRELATIONS_EXPORT SemanticRelationsIntegration : public ISemanticRelationsObservable
@@ -57,14 +53,16 @@ namespace mitk
     *
     * @param observer   The concrete observer to register.
     */
-    virtual void AddObserver(ISemanticRelationsObserver* observer) override;
+    void AddObserver(ISemanticRelationsObserver* observer) override;
     /**
     * @brief Removes the given concrete observer from the vector that holds all currently registered observer.
     *
     * @param observer   The concrete observer to unregister.
     */
-    virtual void RemoveObserver(ISemanticRelationsObserver* observer) override;
-  
+    void RemoveObserver(ISemanticRelationsObserver* observer) override;
+
+    virtual ~SemanticRelationsIntegration() {}
+
     /************************************************************************/
     /* functions to add / remove instances / attributes                     */
     /************************************************************************/
@@ -238,6 +236,16 @@ namespace mitk
     */
     void AddExaminationPeriod(const SemanticTypes::CaseID& caseID, const SemanticTypes::ExaminationPeriod& examinationPeriod);
     /**
+    * @brief  Rename an already existing examination period instance.
+    *
+    * @pre    The UID of the examination period has to exist for an examination period instance.
+    * @throw  SemanticRelationException, if the UID of the examination period does not exist for an examination period instance (this can be checked via 'InstanceExists').
+    *
+    * @param caseID   The current case identifier is defined by the given string.
+    * @param lesion   The examination period instance that renames an existing examination period.
+    */
+    void RenameExaminationPeriod(const SemanticTypes::CaseID& caseID, const SemanticTypes::ExaminationPeriod& examinationPeriod);
+    /**
     * @brief Add a control point to the vector of control point UIDs of an existing examination period.
     *
     * @pre    The UID of the control point has to exist for a control point instance.
@@ -298,7 +306,7 @@ namespace mitk
     *
     * @param  caseID    The caseID that identifies the currently active patient / case.
     */
-    virtual void NotifyObserver(const mitk::SemanticTypes::CaseID& caseID) const override;
+    void NotifyObserver(const mitk::SemanticTypes::CaseID& caseID) const override;
     /**
     * @brief Remove all control points from the storage that are not referenced by any image anymore.
     *        This might happen if an image has been removed (and unlinked from the corresponding control point)

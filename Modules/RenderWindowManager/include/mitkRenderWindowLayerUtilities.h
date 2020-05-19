@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef MITKRENDERWINDOWLAYERUTILITIES_H
 #define MITKRENDERWINDOWLAYERUTILITIES_H
@@ -64,7 +60,15 @@ namespace mitk
     *        The data nodes must not be 'helper objects'. The must have set a 'fixed layer' property for the given renderer.
     */
     MITKRENDERWINDOWMANAGER_EXPORT NodePredicateAnd::Pointer GetRenderWindowPredicate(const BaseRenderer* renderer);
-
+    /**
+    * @brief Set renderer-specific properties to mark a data node as 'managed by the specific renderer'.
+    *        In order for a renderer to manage a data node, the 'fixedLayer' property has to be set for the given renderer.
+    *        Additionally, the 'visible' and the 'layer' property are set and allow to individually render a set of nodes
+    *        with a specific renderer.
+    *        The last two mentioned properties are set so that they initially have the same value as the corresponding
+    *        global property.
+    */
+    MITKRENDERWINDOWMANAGER_EXPORT void SetRenderWindowProperties(mitk::DataNode* dataNode, const BaseRenderer* renderer);
   } // namespace RenderWindowLayerUtilities
 } // namespace mitk
 

@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #include "mitkPluginActivator.h"
 #include "DicomEventHandler.h"
@@ -27,6 +23,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QVector>
 #include "mitkImage.h"
 #include <mitkContourModelSet.h>
+#include <mitkFileReaderRegistry.h>
+#include <mitkDicomRTMimeTypes.h>
 
 #include <mitkDICOMFileReaderSelector.h>
 #include <mitkDICOMDCMTKTagScanner.h>
@@ -36,9 +34,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkPropertyNameHelper.h>
 #include "mitkBaseDICOMReaderService.h"
 
-#include <mitkRTDoseReaderService.h>
-#include <mitkRTPlanReaderService.h>
-#include <mitkRTStructureSetReaderService.h>
 #include <mitkRTConstants.h>
 #include <mitkIsoDoseLevelCollections.h>
 #include <mitkIsoDoseLevelSetProperty.h>
@@ -62,6 +57,21 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <ImporterUtil.h>
 
+namespace
+{
+  mitk::IFileReader* GetReader(mitk::FileReaderRegistry& readerRegistry, const mitk::CustomMimeType& mimeType)
+  {
+    try
+    {
+      return readerRegistry.GetReaders(mitk::MimeType(mimeType, -1, -1)).at(0);
+    }
+    catch (const std::out_of_range&)
+    {
+      mitkThrow() << "Cannot find " << mimeType.GetCategory() << " " << mimeType.GetComment() << " file reader.";
+    }
+  }
+}
+
 DicomEventHandler::DicomEventHandler()
 {
 }
@@ -84,12 +94,13 @@ void DicomEventHandler::OnSignalAddSeriesToDataManager(const ctkEvent& ctkEvent)
         ctkEvent.getProperty("Modality").toString().compare("RTPLAN", Qt::CaseInsensitive) == 0))
     {
       QString modality = ctkEvent.getProperty("Modality").toString();
+      mitk::FileReaderRegistry readerRegistry;
 
       if(modality.compare("RTDOSE",Qt::CaseInsensitive) == 0)
       {
-          auto doseReader = mitk::RTDoseReaderService();
-          doseReader.SetInput(ImporterUtil::getUTF8String(listOfFilesForSeries.front()));
-          std::vector<itk::SmartPointer<mitk::BaseData> > readerOutput = doseReader.Read();
+          auto doseReader = GetReader(readerRegistry, mitk::DicomRTMimeTypes::DICOMRT_DOSE_MIMETYPE());
+          doseReader->SetInput(ImporterUtil::getUTF8String(listOfFilesForSeries.front()));
+          std::vector<itk::SmartPointer<mitk::BaseData> > readerOutput = doseReader->Read();
           if (!readerOutput.empty()){
             mitk::Image::Pointer doseImage = dynamic_cast<mitk::Image*>(readerOutput.at(0).GetPointer());
 
@@ -133,9 +144,9 @@ void DicomEventHandler::OnSignalAddSeriesToDataManager(const ctkEvent& ctkEvent)
       }
       else if(modality.compare("RTSTRUCT",Qt::CaseInsensitive) == 0)
       {
-          auto structReader = mitk::RTStructureSetReaderService();
-          structReader.SetInput(ImporterUtil::getUTF8String(listOfFilesForSeries.front()));
-          std::vector<itk::SmartPointer<mitk::BaseData> > readerOutput = structReader.Read();
+          auto structReader = GetReader(readerRegistry, mitk::DicomRTMimeTypes::DICOMRT_STRUCT_MIMETYPE());
+          structReader->SetInput(ImporterUtil::getUTF8String(listOfFilesForSeries.front()));
+          std::vector<itk::SmartPointer<mitk::BaseData> > readerOutput = structReader->Read();
 
           if (readerOutput.empty()){
               MITK_ERROR << "No structure sets were created" << endl;
@@ -157,13 +168,13 @@ void DicomEventHandler::OnSignalAddSeriesToDataManager(const ctkEvent& ctkEvent)
                   structNode->SetProperty("contour.color", aStruct->GetProperty("contour.color"));
                   structNode->SetProperty("includeInBoundingBox", mitk::BoolProperty::New(false));
                   structNode->SetVisibility(true, mitk::BaseRenderer::GetInstance(
+                      mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget0")));
+                  structNode->SetVisibility(false, mitk::BaseRenderer::GetInstance(
                       mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget1")));
                   structNode->SetVisibility(false, mitk::BaseRenderer::GetInstance(
                       mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget2")));
-                  structNode->SetVisibility(false, mitk::BaseRenderer::GetInstance(
-                      mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget3")));
                   structNode->SetVisibility(true, mitk::BaseRenderer::GetInstance(
-                      mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget4")));
+                      mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget3")));
 
                   dataStorage->Add(structNode);
               }
@@ -172,9 +183,9 @@ void DicomEventHandler::OnSignalAddSeriesToDataManager(const ctkEvent& ctkEvent)
       }
       else if (modality.compare("RTPLAN", Qt::CaseInsensitive) == 0)
       {
-          auto planReader = mitk::RTPlanReaderService();
-          planReader.SetInput(ImporterUtil::getUTF8String(listOfFilesForSeries.front()));
-          std::vector<itk::SmartPointer<mitk::BaseData> > readerOutput = planReader.Read();
+          auto planReader = GetReader(readerRegistry, mitk::DicomRTMimeTypes::DICOMRT_PLAN_MIMETYPE());
+          planReader->SetInput(ImporterUtil::getUTF8String(listOfFilesForSeries.front()));
+          std::vector<itk::SmartPointer<mitk::BaseData> > readerOutput = planReader->Read();
           if (!readerOutput.empty()){
               //there is no image, only the properties are interesting
               mitk::Image::Pointer planDummyImage = dynamic_cast<mitk::Image*>(readerOutput.at(0).GetPointer());

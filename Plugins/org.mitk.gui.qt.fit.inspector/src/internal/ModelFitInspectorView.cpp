@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 
 // Blueberry
@@ -104,7 +100,7 @@ void ModelFitInspectorView::CreateQtPartControl(QWidget* parent)
   m_Controls.inputNodeSelector->SetNodePredicate(predicate);
 
   connect(m_SelectionServiceConnector.get(), &QmitkSelectionServiceConnector::ServiceSelectionChanged, m_Controls.inputNodeSelector, &QmitkSingleNodeSelectionWidget::SetCurrentSelection);
-  connect(m_Controls.inputNodeSelector, SIGNAL(CurrentSelectionChanged(QList<mitk::DataNode::Pointer>)), this, SLOT(OnInputChanged(const QList<mitk::DataNode::Pointer>&)));
+  connect(m_Controls.inputNodeSelector, &QmitkAbstractNodeSelectionWidget::CurrentSelectionChanged, this, &ModelFitInspectorView::OnInputChanged);
 
   this->m_SliceChangeListener.RenderWindowPartActivated(this->GetRenderWindowPart());
   connect(&m_SliceChangeListener, SIGNAL(SliceChanged()), this, SLOT(OnSliceChanged()));
@@ -210,8 +206,8 @@ void ModelFitInspectorView::OnScaleToDataYClicked()
 {
   auto minmax = this->m_PlotCurves.GetYMinMax();
 
-  auto min = minmax.first - abs(minmax.first) * 0.01;
-  auto max = minmax.second + abs(minmax.second) * 0.01;
+  auto min = minmax.first - std::abs(minmax.first) * 0.01;
+  auto max = minmax.second + std::abs(minmax.second) * 0.01;
 
   m_Controls.sbFixMin->setValue(min);
   m_Controls.sbFixMax->setValue(max);
@@ -221,8 +217,8 @@ void ModelFitInspectorView::OnScaleToDataXClicked()
 {
   auto minmax = this->m_PlotCurves.GetXMinMax();
 
-  auto min = minmax.first - abs(minmax.first) * 0.01;
-  auto max = minmax.second + abs(minmax.second) * 0.01;
+  auto min = minmax.first - std::abs(minmax.first) * 0.01;
+  auto max = minmax.second + std::abs(minmax.second) * 0.01;
 
   m_Controls.sbFixMin_x->setValue(min);
   m_Controls.sbFixMax_x->setValue(max);

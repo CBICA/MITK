@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 // MITK
 #include <mitkAbstractTransformGeometry.h>
@@ -803,9 +799,10 @@ void mitk::ImageVtkMapper2D::SetDefaultProperties(mitk::DataNode *node, mitk::Ba
     if ((overwrite) || (node->GetProperty("levelwindow", renderer) == nullptr))
     {
       /* initialize level/window from DICOM tags */
+      mitk::LevelWindow contrast;
+
       std::string sLevel = "";
       std::string sWindow = "";
-
       if (GetBackwardsCompatibleDICOMProperty(
             0x0028, 0x1050, "dicom.voilut.WindowCenter", image->GetPropertyList(), sLevel) &&
           GetBackwardsCompatibleDICOMProperty(
@@ -814,7 +811,6 @@ void mitk::ImageVtkMapper2D::SetDefaultProperties(mitk::DataNode *node, mitk::Ba
         float level = atof(sLevel.c_str());
         float window = atof(sWindow.c_str());
 
-        mitk::LevelWindow contrast;
         std::string sSmallestPixelValueInSeries;
         std::string sLargestPixelValueInSeries;
 
@@ -837,13 +833,18 @@ void mitk::ImageVtkMapper2D::SetDefaultProperties(mitk::DataNode *node, mitk::Ba
         }
         else
         {
-          contrast.SetAuto(static_cast<mitk::Image *>(node->GetData()), false, true); // we need this as a fallback
+          contrast.SetAuto(static_cast<mitk::Image *>(node->GetData()), false, true); // fallback
         }
-
         contrast.SetLevelWindow(level, window, true);
-        node->SetProperty("levelwindow", LevelWindowProperty::New(contrast), renderer);
       }
+      else
+      {
+        contrast.SetAuto(static_cast<mitk::Image *>(node->GetData()), false, true); // fallback
+      }
+
+      node->SetProperty("levelwindow", LevelWindowProperty::New(contrast), renderer);
     }
+
     if (((overwrite) || (node->GetProperty("opaclevelwindow", renderer) == nullptr)) &&
         (image->GetPixelType().GetPixelType() == itk::ImageIOBase::RGBA) &&
         (image->GetPixelType().GetComponentType() == itk::ImageIOBase::UCHAR))

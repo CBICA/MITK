@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef QMITKLESIONTREEITEM_H
 #define QMITKLESIONTREEITEM_H
@@ -31,7 +27,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vector>
 
 /*
-* @brief
+* @brief This class is used by custom tree models to create their tree items.
+*        It provides functions to traverse and modify the tree.
+*        Additionally it holds some 'LesionData' that is used to display lesion properties inside a tree view.
 */
 class QmitkLesionTreeItem : public std::enable_shared_from_this<QmitkLesionTreeItem>
 {
@@ -42,7 +40,6 @@ public:
   using ParentPointer = std::weak_ptr<QmitkLesionTreeItem>;
 
   QmitkLesionTreeItem(mitk::LesionData lesionData = mitk::LesionData());
-  ~QmitkLesionTreeItem();
 
   /**
   * @brief Return the child of this item at a specific position.

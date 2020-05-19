@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef mitkThreeDnTDICOMSeriesReader_h
 #define mitkThreeDnTDICOMSeriesReader_h
@@ -55,6 +51,10 @@ class MITKDICOMREADER_EXPORT ThreeDnTDICOMSeriesReader : public DICOMITKSeriesGD
     void SetGroup3DandT(bool on);
     bool GetGroup3DandT() const;
 
+    itkBooleanMacro(OnlyCondenseSameSeries);
+    itkSetMacro(OnlyCondenseSameSeries, bool);
+    itkGetConstMacro(OnlyCondenseSameSeries, bool);
+
     // void AllocateOutputImages();
     /// \brief Load via multiple calls to itk::ImageSeriesReader.
     bool LoadImages() override;
@@ -64,6 +64,10 @@ class MITKDICOMREADER_EXPORT ThreeDnTDICOMSeriesReader : public DICOMITKSeriesGD
     static bool GetDefaultGroup3DandT()
     {
       return m_DefaultGroup3DandT;
+    }
+    static bool GetDefaultOnlyCondenseSameSeries()
+    {
+      return m_DefaultOnlyCondenseSameSeries;
     }
 
   protected:
@@ -84,8 +88,10 @@ class MITKDICOMREADER_EXPORT ThreeDnTDICOMSeriesReader : public DICOMITKSeriesGD
     bool LoadMitkImageForImageBlockDescriptor(DICOMImageBlockDescriptor& block) const override;
 
     bool m_Group3DandT;
+    bool m_OnlyCondenseSameSeries;
 
     const static bool m_DefaultGroup3DandT = true;
+    const static bool m_DefaultOnlyCondenseSameSeries = true;
 };
 
 }

@@ -33,6 +33,7 @@ set(CPP_FILES
   Algorithms/mitkSurfaceToSurfaceFilter.cpp
   Algorithms/mitkUIDGenerator.cpp
   Algorithms/mitkVolumeCalculator.cpp
+  Algorithms/mitkTemporalJoinImagesFilter.cpp
 
   Controllers/mitkBaseController.cpp
   Controllers/mitkCallbackFromGUIThread.cpp
@@ -186,11 +187,14 @@ set(CPP_FILES
   Interactions/mitkCrosshairPositionEvent.cpp
   Interactions/mitkDataInteractor.cpp
   Interactions/mitkDispatcher.cpp
-  Interactions/mitkDisplayCoordinateOperation.cpp
-  Interactions/mitkDisplayInteractor.cpp
   Interactions/mitkDisplayActionEventBroadcast.cpp
   Interactions/mitkDisplayActionEventFunctions.cpp
   Interactions/mitkDisplayActionEventHandler.cpp
+  Interactions/mitkDisplayActionEventHandlerDesynchronized.cpp
+  Interactions/mitkDisplayActionEventHandlerStd.cpp
+  Interactions/mitkDisplayActionEventHandlerSynchronized.cpp
+  Interactions/mitkDisplayCoordinateOperation.cpp
+  Interactions/mitkDisplayInteractor.cpp
   Interactions/mitkEventConfig.cpp
   Interactions/mitkEventFactory.cpp
   Interactions/mitkEventRecorder.cpp
@@ -216,7 +220,6 @@ set(CPP_FILES
   Interactions/mitkStateMachineContainer.cpp
   Interactions/mitkStateMachineState.cpp
   Interactions/mitkStateMachineTransition.cpp
-  Interactions/mitkStdDisplayActionEventHandler.cpp
   Interactions/mitkVtkEventAdapter.cpp
   Interactions/mitkVtkInteractorStyle.cxx
   Interactions/mitkXML2EventParser.cpp
@@ -266,6 +269,7 @@ set(CPP_FILES
   IO/mitkSurfaceVtkXmlIO.cpp
   IO/mitkVtkLoggingAdapter.cpp
   IO/mitkPreferenceListReaderOptionsFunctor.cpp
+  IO/mitkIOMetaInformationPropertyConstants.cpp
 
   Rendering/mitkAbstractAnnotationRenderer.cpp
   Rendering/mitkAnnotationUtils.cpp

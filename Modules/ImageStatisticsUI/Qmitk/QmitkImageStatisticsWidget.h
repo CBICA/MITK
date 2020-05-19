@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 #ifndef QmitkImageStatisticsWidget_H__INCLUDED
 #define QmitkImageStatisticsWidget_H__INCLUDED
 
@@ -41,6 +37,16 @@ public:
   void SetImageNodes(const std::vector<mitk::DataNode::ConstPointer> &nodes);
   void SetMaskNodes(const std::vector<mitk::DataNode::ConstPointer> &nodes);
   void Reset();
+
+  /*! /brief Set flag to ignore zero valued voxels */
+  void SetIgnoreZeroValueVoxel(bool _arg);
+  /*! /brief Get status of zero value voxel ignoring. */
+  bool GetIgnoreZeroValueVoxel() const;
+
+  /*! /brief Set bin size for histogram resolution.*/
+  void SetHistogramNBins(unsigned int nbins);
+  /*! /brief Get bin size for histogram resolution.*/
+  unsigned int GetHistogramNBins() const;
 
 private:
   void CreateConnections();

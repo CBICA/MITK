@@ -4,9 +4,9 @@
 
 if(WIN32)
   option(VTK_USE_SYSTEM_FREETYPE OFF)
-else(WIN32)
+else()
   option(VTK_USE_SYSTEM_FREETYPE ON)
-endif(WIN32)
+endif()
 
 # Sanity checks
 if(DEFINED VTK_DIR AND NOT EXISTS ${VTK_DIR})
@@ -47,26 +47,35 @@ if(NOT DEFINED VTK_DIR)
       "-DCMAKE_PROJECT_${proj}_INCLUDE:FILEPATH=${CMAKE_ROOT}/Modules/CTestUseLaunchers.cmake"
       )
   endif()
+  
+  set (VTK_PATCH_OPTION
+       PATCH_COMMAND ${PATCH_COMMAND} -p1 -i ${CMAKE_CURRENT_LIST_DIR}/VTK-8.1.0.patch)
+
+  mitk_query_custom_ep_vars()
 
   ExternalProject_Add(${proj}
     LIST_SEPARATOR ${sep}
     URL ${MITK_THIRDPARTY_DOWNLOAD_PREFIX_URL}/VTK-8.1.0.tar.gz
     URL_MD5 4fa5eadbc8723ba0b8d203f05376d932
+    ${VTK_PATCH_OPTION}
     CMAKE_GENERATOR ${gen}
     CMAKE_GENERATOR_PLATFORM ${gen_platform}
     CMAKE_ARGS
-    ${ep_common_args}
-    -DVTK_WRAP_TCL:BOOL=OFF
-    -DVTK_WRAP_PYTHON:BOOL=OFF
-    -DVTK_WRAP_JAVA:BOOL=OFF
-    -DVTK_USE_SYSTEM_FREETYPE:BOOL=${VTK_USE_SYSTEM_FREETYPE}
-    -DVTK_LEGACY_REMOVE:BOOL=ON
-    -DModule_vtkTestingRendering:BOOL=ON
-    ${additional_cmake_args}
+      ${ep_common_args}
+      -DVTK_WRAP_TCL:BOOL=OFF
+      -DVTK_WRAP_PYTHON:BOOL=OFF
+      -DVTK_WRAP_JAVA:BOOL=OFF
+      -DVTK_USE_SYSTEM_FREETYPE:BOOL=${VTK_USE_SYSTEM_FREETYPE}
+      -DVTK_LEGACY_REMOVE:BOOL=ON
+      -DModule_vtkTestingRendering:BOOL=ON
+      ${additional_cmake_args}
+      ${${proj}_CUSTOM_CMAKE_ARGS}
     CMAKE_CACHE_ARGS
-    ${ep_common_cache_args}
+      ${ep_common_cache_args}
+      ${${proj}_CUSTOM_CMAKE_CACHE_ARGS}
     CMAKE_CACHE_DEFAULT_ARGS
-    ${ep_common_cache_default_args}
+      ${ep_common_cache_default_args}
+      ${${proj}_CUSTOM_CMAKE_CACHE_DEFAULT_ARGS}
     DEPENDS ${proj_DEPENDENCIES}
     )
 

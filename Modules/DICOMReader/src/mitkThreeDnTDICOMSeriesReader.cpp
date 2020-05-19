@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #include "mitkThreeDnTDICOMSeriesReader.h"
 #include "mitkITKDICOMSeriesReaderHelper.h"
@@ -20,14 +16,14 @@ See LICENSE.txt or http://www.mitk.org for details.
 mitk::ThreeDnTDICOMSeriesReader
 ::ThreeDnTDICOMSeriesReader(unsigned int decimalPlacesForOrientation)
 :DICOMITKSeriesGDCMReader(decimalPlacesForOrientation)
-,m_Group3DandT(m_DefaultGroup3DandT)
+,m_Group3DandT(m_DefaultGroup3DandT), m_OnlyCondenseSameSeries(m_DefaultOnlyCondenseSameSeries)
 {
 }
 
 mitk::ThreeDnTDICOMSeriesReader
 ::ThreeDnTDICOMSeriesReader(const ThreeDnTDICOMSeriesReader& other )
 :DICOMITKSeriesGDCMReader(other)
-,m_Group3DandT(m_DefaultGroup3DandT)
+,m_Group3DandT(m_DefaultGroup3DandT), m_OnlyCondenseSameSeries(m_DefaultOnlyCondenseSameSeries)
 {
 }
 
@@ -96,6 +92,7 @@ mitk::ThreeDnTDICOMSeriesReader
   // we should describe our need for this tag as needed via a function
   // (however, we currently know that the superclass will always need this tag)
   const DICOMTag tagImagePositionPatient(0x0020, 0x0032);
+  const DICOMTag tagSeriesInstaceUID(0x0020, 0x000e);
 
   while (!remainingBlocks.empty())
   {
@@ -108,6 +105,7 @@ mitk::ThreeDnTDICOMSeriesReader
     const unsigned int currentBlockNumberOfSlices = firstBlock.size();
     const std::string currentBlockFirstOrigin = firstBlock.front()->GetTagValueAsString( tagImagePositionPatient ).value;
     const std::string currentBlockLastOrigin  =  firstBlock.back()->GetTagValueAsString( tagImagePositionPatient ).value;
+    const auto currentBlockSeriesInstanceUID = firstBlock.back()->GetTagValueAsString(tagSeriesInstaceUID).value;
 
     remainingBlocks.erase( remainingBlocks.begin() );
 
@@ -122,10 +120,12 @@ mitk::ThreeDnTDICOMSeriesReader
       const unsigned int otherBlockNumberOfSlices = otherBlock.size();
       const std::string otherBlockFirstOrigin = otherBlock.front()->GetTagValueAsString( tagImagePositionPatient ).value;
       const std::string otherBlockLastOrigin  =  otherBlock.back()->GetTagValueAsString( tagImagePositionPatient ).value;
+      const auto otherBlockSeriesInstanceUID = otherBlock.back()->GetTagValueAsString(tagSeriesInstaceUID).value;
 
       // add matching blocks to current3DnTBlock
       // keep other blocks for later
       if (   otherBlockNumberOfSlices == currentBlockNumberOfSlices
+          && (!m_OnlyCondenseSameSeries || otherBlockSeriesInstanceUID == currentBlockSeriesInstanceUID)
           && otherBlockFirstOrigin == currentBlockFirstOrigin
           && otherBlockLastOrigin == currentBlockLastOrigin
           )

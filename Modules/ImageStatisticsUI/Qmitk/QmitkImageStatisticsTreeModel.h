@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 
 #ifndef QmitkImageStatisticsTreeModel_h
@@ -30,7 +26,10 @@ class QmitkImageStatisticsTreeItem;
 
 /*!
 \class QmitkImageStatisticsTreeModel
-Model that takes a mitk::ImageStatisticsContainer and represents it as model in context of the QT view-model-concept.
+The class is used to represent the information of mitk::ImageStatisticsContainer in the set datastorage in the context of the QT view-model-concept.
+The represented ImageStatisticContainer are specified by setting the image and mask nodes that should be regarded.
+In addition you may specified the statistic computation property HistorgramNBins and IgnoreZeroValueVoxel to select the correct
+statistics.
 */
 class MITKIMAGESTATISTICSUI_EXPORT QmitkImageStatisticsTreeModel : public QmitkAbstractDataStorageModel
 {
@@ -39,17 +38,27 @@ class MITKIMAGESTATISTICSUI_EXPORT QmitkImageStatisticsTreeModel : public QmitkA
 public:
 
   QmitkImageStatisticsTreeModel(QObject *parent = nullptr);
-  virtual ~QmitkImageStatisticsTreeModel();
+  ~QmitkImageStatisticsTreeModel() override;
 
   void SetImageNodes(const std::vector<mitk::DataNode::ConstPointer>& nodes);
   void SetMaskNodes(const std::vector<mitk::DataNode::ConstPointer>& nodes);
   void Clear();
 
-  virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
-  virtual QVariant data(const QModelIndex &index, int role) const override;
-  virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-  virtual int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-  virtual int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+  /*! /brief Set flag to ignore zero valued voxels */
+  void SetIgnoreZeroValueVoxel(bool _arg);
+  /*! /brief Get status of zero value voxel ignoring. */
+  bool GetIgnoreZeroValueVoxel() const;
+
+  /*! /brief Set bin size for histogram resolution.*/
+  void SetHistogramNBins(unsigned int nbins);
+  /*! /brief Get bin size for histogram resolution.*/
+  unsigned int GetHistogramNBins() const;
+
+  Qt::ItemFlags flags(const QModelIndex &index) const override;
+  QVariant data(const QModelIndex &index, int role) const override;
+  QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+  int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+  int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
   QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
   QModelIndex parent(const QModelIndex &child) const override;
@@ -110,6 +119,9 @@ private:
     itk::SimpleFastMutexLock m_Mutex;
     QmitkImageStatisticsTreeItem *m_RootItem;
     QVariant m_HeaderFirstColumn;
+
+    bool m_IgnoreZeroValueVoxel = false;
+    unsigned int m_HistogramNBins = 100;
 };
 
 #endif // mitkQmitkImageStatisticsTreeModel_h

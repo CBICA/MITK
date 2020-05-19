@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #include "mitkClassicDICOMSeriesReader.h"
 
@@ -52,11 +48,12 @@ mitk::ClassicDICOMSeriesReader
   this->SetFixTiltByShearing(true); // that was configurable, default was true
   this->SetToleratedOriginOffset(0.005); // was hard-coded
   this->SetGroup3DandT(true); // that was configurable, default was true
+  this->OnlyCondenseSameSeriesOff();
 
   m_EquiDistantBlocksSorter->SetAcceptTwoSlicesGroups(false); // old reader did not accept that
 
   this->SetConfigurationLabel("2013 sorting logic");
-  this->SetConfigurationDescription("Sort by Image Position, then Acquisition Number, Time, Trigger time, group by 3D+t, group tilted images");
+  this->SetConfigurationDescription("Sort by Image Position, then Acquisition Number, Time, Trigger time, group by 3D+t, group tilted images, condense blocks even if series does not match");
 }
 
 mitk::ClassicDICOMSeriesReader

@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 // std includes
 #include <string>
@@ -60,7 +56,7 @@ typedef std::vector<mitk::ScalarType> DumpedValuesType;
 
 struct DumpIndexCompare
 {
-  bool operator() (const DumpIndexType& lhs, const DumpIndexType& rhs)
+  bool operator() (const DumpIndexType& lhs, const DumpIndexType& rhs) const
   {
     if (lhs[0] < rhs[0])
     {
@@ -433,12 +429,12 @@ int main(int argc, char* argv[])
 
     return EXIT_SUCCESS;
   }
-  catch (itk::ExceptionObject e)
+  catch (const itk::ExceptionObject& e)
   {
-    MITK_ERROR << e;
+    MITK_ERROR << e.what();
     return EXIT_FAILURE;
   }
-  catch (std::exception e)
+  catch (const std::exception& e)
   {
     MITK_ERROR << e.what();
     return EXIT_FAILURE;

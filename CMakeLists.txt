@@ -1,8 +1,8 @@
-set(MITK_CMAKE_MINIMUM_REQUIRED_VERSION 3.13)
+set(MITK_CMAKE_MINIMUM_REQUIRED_VERSION 3.14.5)
 cmake_minimum_required(VERSION ${MITK_CMAKE_MINIMUM_REQUIRED_VERSION})
 
 #-----------------------------------------------------------------------------
-# See https://cmake.org/cmake/help/v3.10/manual/cmake-policies.7.html for details
+# See https://cmake.org/cmake/help/v3.14/manual/cmake-policies.7.html for details
 #-----------------------------------------------------------------------------
 
 set(project_policies )
@@ -185,35 +185,99 @@ endif()
 # Additional MITK Options (also shown during superbuild)
 #-----------------------------------------------------------------------------
 
-macro(env_option name doc value)
-  set(_value $ENV{${name}})
-  if("${_value}" STREQUAL "")
-    set(_value ${value})
-  endif()
-  option(${name} "${doc}" ${_value})
-endmacro()
-
 # -----------------------------------------
 # General build options
 option(BUILD_SHARED_LIBS "Build MITK with shared libraries" ON)
 option(WITH_COVERAGE "Enable/Disable coverage" OFF)
 option(BUILD_TESTING "Test the project" ON)
+option(MITK_FAST_TESTING "Disable long-running tests like packaging" OFF)
+option(MITK_XVFB_TESTING "Execute test drivers through xvfb-run" OFF)
 
-env_option(MITK_BUILD_ALL_APPS "Build all MITK applications" OFF)
-env_option(MITK_BUILD_EXAMPLES "Build the MITK Examples" OFF)
+option(MITK_BUILD_ALL_APPS "Build all MITK applications" OFF)
+option(MITK_BUILD_EXAMPLES "Build the MITK Examples" OFF)
 option(MITK_ENABLE_PIC_READER "Enable support for reading the DKFZ pic file format." ON)
 
-mark_as_advanced(MITK_BUILD_ALL_APPS
-                 MITK_ENABLE_PIC_READER
-                )
+mark_as_advanced(
+  MITK_XVFB_TESTING
+  MITK_FAST_TESTING
+  MITK_BUILD_ALL_APPS
+  MITK_ENABLE_PIC_READER
+)
+
+#-----------------------------------------------------------------------------
+# Set UI testing flags
+#-----------------------------------------------------------------------------
+if(MITK_XVFB_TESTING)
+  set(MITK_XVFB_TESTING_COMMAND "xvfb-run" "--auto-servernum" CACHE STRING "Command and options to test through Xvfb")
+  mark_as_advanced(MITK_XVFB_TESTING_COMMAND)
+endif(MITK_XVFB_TESTING)
+
+# -----------------------------------------
+# Other options
+set(MITK_CUSTOM_REVISION_DESC "" CACHE STRING "Override MITK revision description")
+mark_as_advanced(MITK_CUSTOM_REVISION_DESC)
+
+set_property(GLOBAL PROPERTY MITK_EXTERNAL_PROJECTS "")
+
+include(CMakeExternals/ExternalProjectList.cmake)
+
+foreach(MITK_EXTENSION_DIR ${MITK_EXTENSION_DIRS})
+  set(MITK_CMAKE_EXTERNALS_EXTENSION_DIR ${MITK_EXTENSION_DIR}/CMakeExternals)
+  get_filename_component(MITK_CMAKE_EXTERNALS_EXTENSION_DIR ${MITK_CMAKE_EXTERNALS_EXTENSION_DIR} ABSOLUTE)
+  if(EXISTS ${MITK_CMAKE_EXTERNALS_EXTENSION_DIR}/ExternalProjectList.cmake)
+    include(${MITK_CMAKE_EXTERNALS_EXTENSION_DIR}/ExternalProjectList.cmake)
+  endif()
+endforeach()
+
+# -----------------------------------------
+# Other MITK_USE_* options not related to
+# external projects build via the
+# MITK superbuild
+
+option(MITK_USE_BLUEBERRY "Build the BlueBerry platform" ON)
+option(MITK_USE_OpenCL "Use OpenCL GPU-Computing library" OFF)
+option(MITK_USE_OpenMP "Use OpenMP" OFF)
+option(MITK_USE_Python3 "Use Python 3" OFF)
+
+#-----------------------------------------------------------------------------
+# Build configurations
+#-----------------------------------------------------------------------------
+
+set(_buildConfigs "Custom")
+
+file(GLOB _buildConfigFiles CMake/BuildConfigurations/*.cmake)
+
+foreach(_buildConfigFile ${_buildConfigFiles})
+  get_filename_component(_buildConfigFile ${_buildConfigFile} NAME_WE)
+  list(APPEND _buildConfigs ${_buildConfigFile})
+endforeach()
+
+foreach(MITK_EXTENSION_DIR ${MITK_EXTENSION_DIRS})
+  file(GLOB _extBuildConfigFiles ${MITK_EXTENSION_DIR}/CMake/BuildConfigurations/*.cmake)
+
+  foreach(_extBuildConfigFile ${_extBuildConfigFiles})
+    get_filename_component(_extBuildConfigFile ${_extBuildConfigFile} NAME_WE)
+    list(APPEND _buildConfigs ${_extBuildConfigFile})
+  endforeach()
+
+  list(REMOVE_DUPLICATES _buildConfigs)
+endforeach()
+
+set(MITK_BUILD_CONFIGURATION "Custom" CACHE STRING "Use pre-defined MITK configurations")
+set_property(CACHE MITK_BUILD_CONFIGURATION PROPERTY STRINGS ${_buildConfigs})
+
+mitkFunctionEnableBuildConfiguration()
+
+mitkFunctionCreateWhitelistPaths(MITK)
+mitkFunctionFindWhitelists(MITK)
 
 # -----------------------------------------
 # Qt version related variables
 
-env_option(MITK_USE_Qt5 "Use Qt 5 library" ON)
+option(MITK_USE_Qt5 "Use Qt 5 library" ON)
 
 if(MITK_USE_Qt5)
-  set(MITK_QT5_MINIMUM_VERSION 5.11.1)
+  set(MITK_QT5_MINIMUM_VERSION 5.12)
   set(MITK_QT5_COMPONENTS Concurrent OpenGL PrintSupport Script Sql Svg Widgets Xml XmlPatterns WebEngineWidgets UiTools Help LinguistTools)
   if(APPLE)
     list(APPEND MITK_QT5_COMPONENTS DBus)
@@ -271,59 +335,11 @@ if(MITK_USE_Qt5)
   endif()
 
   find_package(Qt5 ${MITK_QT5_MINIMUM_VERSION} COMPONENTS ${MITK_QT5_COMPONENTS} REQUIRED HINTS ${MITK_QT5_HINTS})
-endif()
 
-set_property(GLOBAL PROPERTY MITK_EXTERNAL_PROJECTS "")
-
-include(CMakeExternals/ExternalProjectList.cmake)
-
-foreach(MITK_EXTENSION_DIR ${MITK_EXTENSION_DIRS})
-  set(MITK_CMAKE_EXTERNALS_EXTENSION_DIR ${MITK_EXTENSION_DIR}/CMakeExternals)
-  get_filename_component(MITK_CMAKE_EXTERNALS_EXTENSION_DIR ${MITK_CMAKE_EXTERNALS_EXTENSION_DIR} ABSOLUTE)
-  if(EXISTS ${MITK_CMAKE_EXTERNALS_EXTENSION_DIR}/ExternalProjectList.cmake)
-    include(${MITK_CMAKE_EXTERNALS_EXTENSION_DIR}/ExternalProjectList.cmake)
+  if(${Qt5_VERSION} VERSION_GREATER_EQUAL 5.13)
+    message(FATAL_ERROR "Qt version ${Qt5_VERSION_MAJOR}.${Qt5_VERSION_MINOR} is not yet supported. We recommend using the latest long-term support version 5.12.x.")
   endif()
-endforeach()
-
-# -----------------------------------------
-# Other MITK_USE_* options not related to
-# external projects build via the
-# MITK superbuild
-
-env_option(MITK_USE_BLUEBERRY "Build the BlueBerry platform" ON)
-env_option(MITK_USE_OpenCL "Use OpenCL GPU-Computing library" OFF)
-
-#-----------------------------------------------------------------------------
-# Build configurations
-#-----------------------------------------------------------------------------
-
-set(_buildConfigs "Custom")
-
-file(GLOB _buildConfigFiles CMake/BuildConfigurations/*.cmake)
-
-foreach(_buildConfigFile ${_buildConfigFiles})
-  get_filename_component(_buildConfigFile ${_buildConfigFile} NAME_WE)
-  list(APPEND _buildConfigs ${_buildConfigFile})
-endforeach()
-
-foreach(MITK_EXTENSION_DIR ${MITK_EXTENSION_DIRS})
-  file(GLOB _extBuildConfigFiles ${MITK_EXTENSION_DIR}/CMake/BuildConfigurations/*.cmake)
-
-  foreach(_extBuildConfigFile ${_extBuildConfigFiles})
-    get_filename_component(_extBuildConfigFile ${_extBuildConfigFile} NAME_WE)
-    list(APPEND _buildConfigs ${_extBuildConfigFile})
-  endforeach()
-
-  list(REMOVE_DUPLICATES _buildConfigs)
-endforeach()
-
-set(MITK_BUILD_CONFIGURATION "Custom" CACHE STRING "Use pre-defined MITK configurations")
-set_property(CACHE MITK_BUILD_CONFIGURATION PROPERTY STRINGS ${_buildConfigs})
-
-mitkFunctionEnableBuildConfiguration()
-
-mitkFunctionCreateWhitelistPaths(MITK)
-mitkFunctionFindWhitelists(MITK)
+endif()
 
 # -----------------------------------------
 # Custom dependency logic
@@ -362,15 +378,20 @@ if(MITK_USE_cpprestsdk)
   set(MITK_USE_Boost_LIBRARIES ${MITK_USE_Boost_LIBRARIES} CACHE STRING "A semi-colon separated list of required Boost libraries" FORCE)
 endif()
 
-if(MITK_USE_Python)
-  set(MITK_USE_ZLIB ON)
-  find_package(PythonLibs 3 REQUIRED)
-  find_package(PythonInterp 3 REQUIRED)
+if(MITK_USE_Python3)
+  set(MITK_USE_ZLIB ON CACHE BOOL "" FORCE)
 
-  if ( NOT PYTHON_VERSION_STRING VERSION_EQUAL PYTHONLIBS_VERSION_STRING)
-    message(SEND_ERROR "Inconsistent python versions found: interpreter ${PYTHON_VERSION_STRING} vs. libs ${PYTHONLIBS_VERSION_STRING}" )
+  if(APPLE AND CMAKE_FRAMEWORK_PATH AND CMAKE_FRAMEWORK_PATH MATCHES "python3\\.?([0-9]+)")
+    find_package(Python3 3.${CMAKE_MATCH_1} EXACT REQUIRED COMPONENTS Interpreter Development NumPy)
+  else()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
   endif()
-  find_package(Numpy REQUIRED)
+
+  if(WIN32)
+    string(REPLACE "\\" "/" Python3_STDARCH "${Python3_STDARCH}")
+    string(REPLACE "\\" "/" Python3_STDLIB "${Python3_STDLIB}")
+    string(REPLACE "\\" "/" Python3_SITELIB "${Python3_SITELIB}")
+  endif()
 endif()
 
 if(BUILD_TESTING AND NOT MITK_USE_CppUnit)
@@ -468,12 +489,23 @@ list(APPEND CTEST_PROJECT_SUBPROJECTS
   MITK-CoreUI
   MITK-IGT
   MITK-ToF
-  MITK-DTI
   MITK-Modules # all modules not contained in a specific subproject
   MITK-Plugins # all plugins not contained in a specific subproject
   MITK-Examples
   Unlabeled # special "subproject" catching all unlabeled targets and tests
   )
+
+foreach(MITK_EXTENSION_DIR ${MITK_EXTENSION_DIRS})
+  set(MITK_CMAKE_EXTENSION_DIR ${MITK_EXTENSION_DIR}/CMake)
+  get_filename_component(MITK_CMAKE_EXTENSION_DIR ${MITK_CMAKE_EXTENSION_DIR} ABSOLUTE)
+  if(EXISTS ${MITK_CMAKE_EXTENSION_DIR}/CTestSubprojectList.cmake)
+    set(MITK_CTEST_SUBPROJECTS "")
+    include(${MITK_CMAKE_EXTENSION_DIR}/CTestSubprojectList.cmake)
+    if(MITK_CTEST_SUBPROJECTS)
+      list(APPEND CTEST_PROJECT_SUBPROJECTS ${MITK_CTEST_SUBPROJECTS})
+    endif()
+  endif()
+endforeach()
 
 # Configure CTestConfigSubProject.cmake that could be used by CTest scripts
 configure_file(${MITK_SOURCE_DIR}/CTestConfigSubProject.cmake.in
@@ -510,6 +542,14 @@ endif()
 #*****************************************************************************
 
 #-----------------------------------------------------------------------------
+# Organize MITK targets in folders
+#-----------------------------------------------------------------------------
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(MITK_ROOT_FOLDER "MITK" CACHE STRING "")
+mark_as_advanced(MITK_ROOT_FOLDER)
+
+#-----------------------------------------------------------------------------
 # CMake function(s) and macro(s)
 #-----------------------------------------------------------------------------
 
@@ -535,7 +575,6 @@ include(mitkFunctionInstallCTKPlugin)
 include(mitkFunctionInstallProvisioningFiles)
 include(mitkFunctionInstallThirdPartyCTKPlugins)
 include(mitkFunctionOrganizeSources)
-include(mitkFunctionTestPlugin)
 include(mitkFunctionUseModules)
 if( ${MITK_USE_MatchPoint} )
   include(mitkFunctionCreateMatchPointDeployedAlgorithm)
@@ -625,7 +664,7 @@ find_package(Doxygen)
 option(BLUEBERRY_DEBUG_SMARTPOINTER "Enable code for debugging smart pointers" OFF)
 mark_as_advanced(BLUEBERRY_DEBUG_SMARTPOINTER)
 
-# ASK THE USER TO SHOW THE CONSOLE WINDOW FOR CoreApp and mitkWorkbench
+# Ask the user to show the console window for applications
 option(MITK_SHOW_CONSOLE_WINDOW "Use this to enable or disable the console window when starting MITK GUI Applications" ON)
 mark_as_advanced(MITK_SHOW_CONSOLE_WINDOW)
 
@@ -636,7 +675,7 @@ mark_as_advanced(USE_ITKZLIB)
 if(NOT MITK_FAST_TESTING)
   if(DEFINED MITK_CTEST_SCRIPT_MODE
       AND (MITK_CTEST_SCRIPT_MODE STREQUAL "continuous" OR MITK_CTEST_SCRIPT_MODE STREQUAL "experimental") )
-    set(MITK_FAST_TESTING 1)
+    set(MITK_FAST_TESTING ON)
   endif()
 endif()
 
@@ -729,13 +768,6 @@ set(MITK_CXX_FLAGS_RELEASE )
 set(MITK_EXE_LINKER_FLAGS )
 set(MITK_SHARED_LINKER_FLAGS )
 
-find_package(OpenMP)
-
-if (OPENMP_FOUND)
-  set(MITK_C_FLAGS "${MITK_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
-
 if(WIN32)
   set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} -DPOCO_NO_UNWINDOWS -DWIN32_LEAN_AND_MEAN -DNOMINMAX")
   mitkFunctionCheckCompilerFlags("/wd4005" MITK_CXX_FLAGS) # warning C4005: macro redefinition
@@ -766,7 +798,7 @@ if(NOT MSVC_VERSION)
     -Wstrict-null-sentinel
     #-Wold-style-cast
     #-Wsign-promo
-
+    -Wno-error=deprecated-copy
     -Wno-array-bounds
 
     -fdiagnostics-show-option
@@ -887,6 +919,28 @@ if(MITK_USE_OpenCL)
   find_package(OpenCL REQUIRED)
 endif()
 
+if(MITK_USE_OpenMP)
+  find_package(OpenMP REQUIRED COMPONENTS CXX)
+else()
+  find_package(OpenMP QUIET COMPONENTS CXX)
+
+  if(OpenMP_FOUND)
+    set(MITK_USE_OpenMP ON CACHE BOOL "" FORCE)
+  elseif(APPLE AND OpenMP_libomp_LIBRARY AND NOT OpenMP_CXX_LIB_NAMES)
+    set(OpenMP_CXX_LIB_NAMES libomp CACHE STRING "" FORCE)
+    get_filename_component(openmp_lib_dir "${OpenMP_libomp_LIBRARY}" DIRECTORY)
+    set(openmp_include_dir "${openmp_lib_dir}/../include")
+    if(EXISTS "${openmp_include_dir}")
+      get_filename_component(openmp_include_dir "${openmp_include_dir}" REALPATH)
+      set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${openmp_include_dir}" CACHE STRING "" FORCE)
+      find_package(OpenMP QUIET COMPONENTS CXX)
+      if(OpenMP_FOUND)
+        set(MITK_USE_OpenMP ON CACHE BOOL "" FORCE)
+      endif()
+    endif()
+  endif()
+endif()
+
 # Qt support
 if(MITK_USE_Qt5)
   find_package(Qt5Core ${MITK_QT5_MINIMUM_VERSION} REQUIRED) # at least Core required
@@ -983,14 +1037,6 @@ if(BUILD_TESTING)
   include(CTest)
   mark_as_advanced(TCL_TCLSH DART_ROOT)
 
-  option(MITK_ENABLE_RENDERING_TESTING OFF "Enable the MITK rendering tests. Requires x-server in Linux.")
-  #Rendering testing does not work for Linux nightlies, thus it is disabled per default
-  #and activated for Mac and Windows.
-  if(WIN32 OR APPLE)
-    set(MITK_ENABLE_RENDERING_TESTING ON)
-  endif()
-  mark_as_advanced( MITK_ENABLE_RENDERING_TESTING )
-
   # Setup file for setting custom ctest vars
   configure_file(
     CMake/CTestCustom.cmake.in
@@ -1011,7 +1057,7 @@ if(BUILD_TESTING)
     try
       {")
   set(CMAKE_TESTDRIVER_AFTER_TESTMAIN "    }
-      catch( std::exception & excp )
+      catch ( const std::exception & excp  )
         {
         fprintf(stderr,\"%s\\n\",excp.what());
         return EXIT_FAILURE;
@@ -1026,11 +1072,6 @@ if(BUILD_TESTING)
   set(MITK_TEST_OUTPUT_DIR "${MITK_BINARY_DIR}/test_output")
   if(NOT EXISTS ${MITK_TEST_OUTPUT_DIR})
     file(MAKE_DIRECTORY ${MITK_TEST_OUTPUT_DIR})
-  endif()
-
-  # Test the external project template
-  if(MITK_USE_BLUEBERRY)
-    include(mitkTestProjectTemplate)
   endif()
 
   # Test the package target
@@ -1071,6 +1112,7 @@ set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${MITK_MODULE_LINKER
 foreach(subproject ${CTEST_PROJECT_SUBPROJECTS})
   if(NOT TARGET ${subproject} AND NOT subproject MATCHES "Unlabeled")
     add_custom_target(${subproject})
+    set_property(TARGET ${subproject} PROPERTY FOLDER "${MITK_ROOT_FOLDER}/CTestSubprojects")
   endif()
 endforeach()
 
@@ -1085,7 +1127,9 @@ add_subdirectory(Modules)
 include("${CMAKE_CURRENT_SOURCE_DIR}/Modules/ModuleList.cmake")
 mitkFunctionWhitelistModules(MITK MITK_MODULES)
 
+set(MITK_ROOT_FOLDER_BACKUP "${MITK_ROOT_FOLDER}")
 foreach(MITK_EXTENSION_DIR ${MITK_EXTENSION_DIRS})
+  get_filename_component(MITK_ROOT_FOLDER ${MITK_EXTENSION_DIR} NAME)
   set(MITK_MODULES_EXTENSION_DIR ${MITK_EXTENSION_DIR}/Modules)
   get_filename_component(MITK_MODULES_EXTENSION_DIR ${MITK_MODULES_EXTENSION_DIR} ABSOLUTE)
   if(EXISTS ${MITK_MODULES_EXTENSION_DIR}/ModuleList.cmake)
@@ -1097,24 +1141,17 @@ foreach(MITK_EXTENSION_DIR ${MITK_EXTENSION_DIRS})
   endif()
   set(MITK_MODULE_NAME_PREFIX ${MITK_DEFAULT_MODULE_NAME_PREFIX})
 endforeach()
+set(MITK_ROOT_FOLDER "${MITK_ROOT_FOLDER_BACKUP}")
 
 add_subdirectory(Wrapping)
 
+set(MITK_DOXYGEN_OUTPUT_DIR "${PROJECT_BINARY_DIR}/Documentation/Doxygen" CACHE PATH
+  "Output directory for doxygen generated documentation.")
+
 if(MITK_USE_BLUEBERRY)
 
-  set(BLUEBERRY_XPDOC_OUTPUT_DIR ${MITK_DOXYGEN_OUTPUT_DIR}/html/extension-points/html/)
-
-  # Plug-in testing (needs some work to be enabled again)
-  if(BUILD_TESTING)
-    set(BLUEBERRY_UI_TEST_APP "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreApp")
-    if(TARGET CoreApp)
-      get_target_property(_is_macosx_bundle CoreApp MACOSX_BUNDLE)
-      if(APPLE AND _is_macosx_bundle)
-        set(BLUEBERRY_UI_TEST_APP "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreApp.app/Contents/MacOS/CoreApp")
-      endif()
-    endif()
-    set(BLUEBERRY_TEST_APP_ID "org.mitk.qt.coreapplication")
-  endif()
+  set(BLUEBERRY_XPDOC_OUTPUT_DIR "${MITK_DOXYGEN_OUTPUT_DIR}/html/extension-points/html/")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${BLUEBERRY_XPDOC_OUTPUT_DIR})
 
   include("${CMAKE_CURRENT_SOURCE_DIR}/Plugins/PluginList.cmake")
   mitkFunctionWhitelistPlugins(MITK MITK_PLUGINS)

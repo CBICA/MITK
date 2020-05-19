@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 // render window manager UI module
 #include "QmitkRenderWindowDataStorageInspector.h"
@@ -34,39 +30,40 @@ QmitkRenderWindowDataStorageInspector::QmitkRenderWindowDataStorageInspector(QWi
   m_RenderWindowLayerController = std::make_unique<mitk::RenderWindowLayerController>();
   m_RenderWindowViewDirectionController = std::make_unique<mitk::RenderWindowViewDirectionController>();
 
-  m_StorageModel = std::make_unique<QmitkRenderWindowDataStorageListModel>(this);
+  m_StorageModel = std::make_unique<QmitkRenderWindowDataStorageTreeModel>(this);
 
-  m_Controls.renderWindowListView->setModel(m_StorageModel.get());
-  m_Controls.renderWindowListView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-  m_Controls.renderWindowListView->setSelectionBehavior(QAbstractItemView::SelectRows);
-  m_Controls.renderWindowListView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-  m_Controls.renderWindowListView->setAlternatingRowColors(true);
-  m_Controls.renderWindowListView->setDragEnabled(true);
-  m_Controls.renderWindowListView->setDropIndicatorShown(true);
-  m_Controls.renderWindowListView->setAcceptDrops(true);
-  m_Controls.renderWindowListView->setContextMenuPolicy(Qt::CustomContextMenu);
+  m_Controls.renderWindowTreeView->setModel(m_StorageModel.get());
+  m_Controls.renderWindowTreeView->setHeaderHidden(true);
+  m_Controls.renderWindowTreeView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  m_Controls.renderWindowTreeView->setSelectionBehavior(QAbstractItemView::SelectRows);
+  m_Controls.renderWindowTreeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+  m_Controls.renderWindowTreeView->setAlternatingRowColors(true);
+  m_Controls.renderWindowTreeView->setDragEnabled(true);
+  m_Controls.renderWindowTreeView->setDropIndicatorShown(true);
+  m_Controls.renderWindowTreeView->setAcceptDrops(true);
+  m_Controls.renderWindowTreeView->setContextMenuPolicy(Qt::CustomContextMenu);
 
   SetUpConnections();
 }
 
 QAbstractItemView* QmitkRenderWindowDataStorageInspector::GetView()
 {
-  return m_Controls.renderWindowListView;
+  return m_Controls.renderWindowTreeView;
 }
 
 const QAbstractItemView* QmitkRenderWindowDataStorageInspector::GetView() const
 {
-  return m_Controls.renderWindowListView;
+  return m_Controls.renderWindowTreeView;
 }
 
 void QmitkRenderWindowDataStorageInspector::SetSelectionMode(SelectionMode mode)
 {
-  m_Controls.renderWindowListView->setSelectionMode(mode);
+  m_Controls.renderWindowTreeView->setSelectionMode(mode);
 }
 
 QmitkRenderWindowDataStorageInspector::SelectionMode QmitkRenderWindowDataStorageInspector::GetSelectionMode() const
 {
-  return m_Controls.renderWindowListView->selectionMode();
+  return m_Controls.renderWindowTreeView->selectionMode();
 }
 
 void QmitkRenderWindowDataStorageInspector::Initialize()
@@ -84,11 +81,13 @@ void QmitkRenderWindowDataStorageInspector::Initialize()
   m_RenderWindowLayerController->SetDataStorage(dataStorage);
   m_RenderWindowViewDirectionController->SetDataStorage(dataStorage);
 
-  m_Connector->SetView(m_Controls.renderWindowListView);
+  m_Connector->SetView(m_Controls.renderWindowTreeView);
 }
 
 void QmitkRenderWindowDataStorageInspector::SetUpConnections()
 {
+  connect(m_StorageModel.get(), &QAbstractItemModel::rowsInserted, this, &QmitkRenderWindowDataStorageInspector::ModelRowsInserted);
+
   connect(m_Controls.pushButtonSetAsBaseLayer, &QPushButton::clicked, this, &QmitkRenderWindowDataStorageInspector::SetAsBaseLayer);
   connect(m_Controls.pushButtonResetRenderer, &QPushButton::clicked, this, &QmitkRenderWindowDataStorageInspector::ResetRenderer);
 
@@ -138,9 +137,14 @@ void QmitkRenderWindowDataStorageInspector::SetActiveRenderWindow(const QString&
   }
 }
 
+void QmitkRenderWindowDataStorageInspector::ModelRowsInserted(const QModelIndex& parent, int /*start*/, int /*end*/)
+{
+  m_Controls.renderWindowTreeView->setExpanded(parent, true);
+}
+
 void QmitkRenderWindowDataStorageInspector::SetAsBaseLayer()
 {
-  QModelIndex selectedIndex = m_Controls.renderWindowListView->currentIndex();
+  QModelIndex selectedIndex = m_Controls.renderWindowTreeView->currentIndex();
   if (selectedIndex.isValid())
   {
     QVariant qvariantDataNode = m_StorageModel->data(selectedIndex, Qt::UserRole);
@@ -148,7 +152,7 @@ void QmitkRenderWindowDataStorageInspector::SetAsBaseLayer()
     {
       mitk::DataNode* dataNode = qvariantDataNode.value<mitk::DataNode*>();
       m_RenderWindowLayerController->SetBaseDataNode(dataNode, m_StorageModel->GetCurrentRenderer());
-      m_Controls.renderWindowListView->clearSelection();
+      m_Controls.renderWindowTreeView->clearSelection();
     }
   }
 }
@@ -156,7 +160,7 @@ void QmitkRenderWindowDataStorageInspector::SetAsBaseLayer()
 void QmitkRenderWindowDataStorageInspector::ResetRenderer()
 {
   m_RenderWindowLayerController->ResetRenderer(true, m_StorageModel->GetCurrentRenderer());
-  m_Controls.renderWindowListView->clearSelection();
+  m_Controls.renderWindowTreeView->clearSelection();
 }
 
 void QmitkRenderWindowDataStorageInspector::ChangeViewDirection(const QString& viewDirection)

@@ -1,22 +1,18 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #include <QmitkChartxyData.h>
 
-QmitkChartxyData::QmitkChartxyData(const QMap<QVariant, QVariant> &data,
+QmitkChartxyData::QmitkChartxyData(const std::vector< std::pair<double, double> > &data,
                                    const QVariant &label,
                                    const QVariant &chartType,
                                    const QVariant &position)
@@ -25,10 +21,10 @@ QmitkChartxyData::QmitkChartxyData(const QMap<QVariant, QVariant> &data,
   SetData(data);
 }
 
-void QmitkChartxyData::SetData(const QMap<QVariant, QVariant> &data)
+void QmitkChartxyData::SetData(const std::vector< std::pair<double, double> > &data)
 {
   ClearData();
-  for (const auto &entry : data.toStdMap())
+  for (const auto &entry : data)
   {
     m_XData.push_back(entry.first);
     m_YData.push_back(entry.second);

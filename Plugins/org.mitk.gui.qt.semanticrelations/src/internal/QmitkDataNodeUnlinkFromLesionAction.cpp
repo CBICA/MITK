@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 // semantic relations plugin
 #include "QmitkDataNodeUnlinkFromLesionAction.h"
@@ -20,6 +16,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 // semantic relations module
 #include <mitkNodePredicates.h>
 #include <mitkSemanticRelationException.h>
+#include <mitkSemanticRelationsIntegration.h>
 #include <mitkUIDGeneratorBoost.h>
 
 // mitk gui common plugin
@@ -31,7 +28,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 // namespace that contains the concrete action
 namespace UnlinkFromLesionAction
 {
-  void Run(mitk::SemanticRelationsIntegration* semanticRelationsIntegration, const mitk::DataNode* dataNode)
+  void Run(const mitk::DataNode* dataNode)
   {
     if (nullptr == dataNode)
     {
@@ -40,9 +37,10 @@ namespace UnlinkFromLesionAction
 
     if (mitk::NodePredicates::GetSegmentationPredicate()->CheckNode(dataNode))
     {
+      mitk::SemanticRelationsIntegration semanticRelationsIntegration;
       try
       {
-        semanticRelationsIntegration->UnlinkSegmentationFromLesion(dataNode);
+        semanticRelationsIntegration.UnlinkSegmentationFromLesion(dataNode);
       }
       catch (const mitk::SemanticRelationException& e)
       {
@@ -66,7 +64,7 @@ namespace UnlinkFromLesionAction
 
 QmitkDataNodeUnlinkFromLesionAction::QmitkDataNodeUnlinkFromLesionAction(QWidget* parent, berry::IWorkbenchPartSite::Pointer workbenchPartSite)
   : QAction(parent)
-  , QmitkAbstractSemanticRelationsAction(workbenchPartSite)
+  , QmitkAbstractDataNodeAction(workbenchPartSite)
 {
   setText(tr("Unlink from lesion"));
   InitializeAction();
@@ -74,15 +72,10 @@ QmitkDataNodeUnlinkFromLesionAction::QmitkDataNodeUnlinkFromLesionAction(QWidget
 
 QmitkDataNodeUnlinkFromLesionAction::QmitkDataNodeUnlinkFromLesionAction(QWidget* parent, berry::IWorkbenchPartSite* workbenchPartSite)
   : QAction(parent)
-  , QmitkAbstractSemanticRelationsAction(berry::IWorkbenchPartSite::Pointer(workbenchPartSite))
+  , QmitkAbstractDataNodeAction(berry::IWorkbenchPartSite::Pointer(workbenchPartSite))
 {
   setText(tr("Unlink from lesion"));
   InitializeAction();
-}
-
-QmitkDataNodeUnlinkFromLesionAction::~QmitkDataNodeUnlinkFromLesionAction()
-{
-  // nothing here
 }
 
 void QmitkDataNodeUnlinkFromLesionAction::InitializeAction()
@@ -92,11 +85,6 @@ void QmitkDataNodeUnlinkFromLesionAction::InitializeAction()
 
 void QmitkDataNodeUnlinkFromLesionAction::OnActionTriggered(bool /*checked*/)
 {
-  if (nullptr == m_SemanticRelationsIntegration)
-  {
-    return;
-  }
-
   auto dataNode = GetSelectedNode();
-  UnlinkFromLesionAction::Run(m_SemanticRelationsIntegration.get(), dataNode);
+  UnlinkFromLesionAction::Run(dataNode);
 }

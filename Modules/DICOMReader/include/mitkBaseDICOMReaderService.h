@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef MITKBASEDICOMREADERSERVICE_H
 #define MITKBASEDICOMREADERSERVICE_H
@@ -36,20 +32,30 @@ public:
 
   using AbstractFileReader::Read;
 
-  /** Uses this->GetRelevantFile() and this->GetReader to load the image.
-   * data and puts it into base data instances-*/
-  std::vector<itk::SmartPointer<BaseData> > Read() override;
-
   IFileReader::ConfidenceLevel GetConfidenceLevel() const override;
 
 protected:
-  /** Returns the list of all DCM files that are in the same directory
+  /** Uses this->GetRelevantFile() and this->GetReader to load the image.
+   * data and puts it into base data instances-*/
+  std::vector<itk::SmartPointer<BaseData>> DoRead() override;
+
+ /** Returns the list of all DCM files that are in the same directory
    * like this->GetLocalFileName().*/
-  mitk::StringList GetRelevantFiles() const;
+  mitk::StringList GetDICOMFilesInSameDirectory() const;
 
   /** Returns the reader instance that should be used. The descission may be based
    * one the passed relevant file list.*/
   virtual mitk::DICOMFileReader::Pointer GetReader(const mitk::StringList& relevantFiles) const = 0;
+
+  void SetOnlyRegardOwnSeries(bool);
+  bool GetOnlyRegardOwnSeries() const;
+
+private:
+  /** Flags that constrols if the read() operation should only regard DICOM files of the same series
+  if the specified GetLocalFileName() is a file. If it is a director, this flag has no impact (it is
+  assumed false then).
+  */
+  bool m_OnlyRegardOwnSeries = true;
 };
 
 

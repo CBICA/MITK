@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 // semantic relations plugin
 #include "QmitkDataNodeRemoveFromSemanticRelationsAction.h"
@@ -20,6 +16,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 // semantic relations module
 #include <mitkNodePredicates.h>
 #include <mitkSemanticRelationException.h>
+#include <mitkSemanticRelationsIntegration.h>
 
 // mitk gui common plugin
 #include <mitkDataNodeSelection.h>
@@ -30,77 +27,76 @@ See LICENSE.txt or http://www.mitk.org for details.
 // namespace that contains the concrete action
 namespace RemoveFromSemanticRelationsAction
 {
-  void Run(mitk::SemanticRelationsIntegration* semanticRelationsIntegration, const mitk::DataNode* dataNode)
+  void Run(mitk::DataStorage* dataStorage, const mitk::DataNode* dataNode)
   {
-    if (nullptr == dataNode)
+    if (nullptr == dataStorage
+     || nullptr == dataNode)
     {
       return;
     }
 
     if (mitk::NodePredicates::GetImagePredicate()->CheckNode(dataNode))
     {
-      RemoveImage(semanticRelationsIntegration, dataNode);
+      try
+      {
+        RemoveImage(dataStorage, dataNode);
+      }
+      catch (mitk::SemanticRelationException& e)
+      {
+        mitkReThrow(e);
+      }
     }
     else if (mitk::NodePredicates::GetSegmentationPredicate()->CheckNode(dataNode))
     {
-      RemoveSegmentation(semanticRelationsIntegration, dataNode);
+      try
+      {
+        RemoveSegmentation(dataNode);
+      }
+      catch (mitk::SemanticRelationException& e)
+      {
+        mitkReThrow(e);
+      }
     }
   }
 
-  void RemoveImage(mitk::SemanticRelationsIntegration* semanticRelationsIntegration, const mitk::DataNode* image)
+  void RemoveImage(mitk::DataStorage* dataStorage, const mitk::DataNode* image)
   {
-    if (nullptr == image)
-    {
-      return;
-    }
-
+    mitk::SemanticRelationsIntegration semanticRelationsIntegration;
     try
     {
+      // remove each corresponding segmentation from the semantic relations storage
+      mitk::DataStorage::SetOfObjects::ConstPointer childNodes = dataStorage->GetDerivations(image, mitk::NodePredicates::GetSegmentationPredicate(), false);
+      for (auto it = childNodes->Begin(); it != childNodes->End(); ++it)
+      {
+        RemoveSegmentation(it->Value());
+      }
       // remove the image from the semantic relations storage
-      semanticRelationsIntegration->RemoveImage(image);
+      semanticRelationsIntegration.RemoveImage(image);
     }
-    catch (const mitk::SemanticRelationException& e)
+    catch (mitk::SemanticRelationException& e)
     {
-      std::stringstream exceptionMessage; exceptionMessage << e;
-      QMessageBox msgBox;
-      msgBox.setWindowTitle("Could not remove the selected image.");
-      msgBox.setText("The program wasn't able to correctly remove the selected image.\n"
-        "Reason:\n" + QString::fromStdString(exceptionMessage.str()));
-      msgBox.setIcon(QMessageBox::Warning);
-      msgBox.exec();
-      return;
+      mitkReThrow(e);
     }
   }
 
-  void RemoveSegmentation(mitk::SemanticRelationsIntegration* semanticRelationsIntegration, const mitk::DataNode* segmentation)
+  void RemoveSegmentation(const mitk::DataNode* segmentation)
   {
-    if (nullptr == segmentation)
-    {
-      return;
-    }
-
+    mitk::SemanticRelationsIntegration semanticRelationsIntegration;
     try
     {
       // remove the segmentation from the semantic relations storage
-      semanticRelationsIntegration->RemoveSegmentation(segmentation);
+      semanticRelationsIntegration.RemoveSegmentation(segmentation);
     }
-    catch (const mitk::SemanticRelationException& e)
+    catch (mitk::SemanticRelationException& e)
     {
-      std::stringstream exceptionMessage; exceptionMessage << e;
-      QMessageBox msgBox;
-      msgBox.setWindowTitle("Could not remove the selected segmentation.");
-      msgBox.setText("The program wasn't able to correctly remove the selected segmentation.\n"
-        "Reason:\n" + QString::fromStdString(exceptionMessage.str()));
-      msgBox.setIcon(QMessageBox::Warning);
-      msgBox.exec();
-      return;
+      mitkReThrow(e);
     }
   }
 }
 
 QmitkDataNodeRemoveFromSemanticRelationsAction::QmitkDataNodeRemoveFromSemanticRelationsAction(QWidget* parent, berry::IWorkbenchPartSite::Pointer workbenchPartSite)
   : QAction(parent)
-  , QmitkAbstractSemanticRelationsAction(workbenchPartSite)
+  , QmitkAbstractDataNodeAction(workbenchPartSite)
 {
   setText(tr("Remove from semantic relations"));
   InitializeAction();
@@ -108,15 +104,10 @@ QmitkDataNodeRemoveFromSemanticRelationsAction::QmitkDataNodeRemoveFromSemanticR
 
 QmitkDataNodeRemoveFromSemanticRelationsAction::QmitkDataNodeRemoveFromSemanticRelationsAction(QWidget* parent, berry::IWorkbenchPartSite* workbenchPartSite)
   : QAction(parent)
-  , QmitkAbstractSemanticRelationsAction(berry::IWorkbenchPartSite::Pointer(workbenchPartSite))
+  , QmitkAbstractDataNodeAction(berry::IWorkbenchPartSite::Pointer(workbenchPartSite))
 {
   setText(tr("Remove from semantic relations"));
   InitializeAction();
-}
-
-QmitkDataNodeRemoveFromSemanticRelationsAction::~QmitkDataNodeRemoveFromSemanticRelationsAction()
-{
-  // nothing here
 }
 
 void QmitkDataNodeRemoveFromSemanticRelationsAction::InitializeAction()
@@ -126,6 +117,11 @@ void QmitkDataNodeRemoveFromSemanticRelationsAction::InitializeAction()
 
 void QmitkDataNodeRemoveFromSemanticRelationsAction::OnActionTriggered(bool /*checked*/)
 {
+  if (m_DataStorage.IsExpired())
+  {
+    return;
+  }
+
   auto dataNode = GetSelectedNode();
-  RemoveFromSemanticRelationsAction::Run(m_SemanticRelationsIntegration.get(), dataNode);
+  RemoveFromSemanticRelationsAction::Run(m_DataStorage.Lock(),dataNode);
 }

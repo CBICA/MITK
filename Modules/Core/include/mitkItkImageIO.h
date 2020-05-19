@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef MITKITKFILEIO_H
 #define MITKITKFILEIO_H
@@ -40,7 +36,6 @@ namespace mitk
     // -------------- AbstractFileReader -------------
 
     using AbstractFileReader::Read;
-    std::vector<itk::SmartPointer<BaseData>> Read() override;
 
     ConfidenceLevel GetReaderConfidenceLevel() const override;
 
@@ -56,6 +51,9 @@ namespace mitk
     // Fills the m_DefaultMetaDataKeys vector with default values
     virtual void InitializeDefaultMetaDataKeys();
 
+    // -------------- AbstractFileReader -------------
+    std::vector<itk::SmartPointer<BaseData>> DoRead() override;
+
   private:
     ItkImageIO(const ItkImageIO &other);
 
@@ -65,6 +63,16 @@ namespace mitk
 
     std::vector<std::string> m_DefaultMetaDataKeys;
   };
+
+  /**Helper function that converts the content of a meta data into a time point vector.
+   * If MetaData is not valid or cannot be converted an empty vector is returned.*/
+  MITKCORE_EXPORT std::vector<TimePointType> ConvertMetaDataObjectToTimePointList(const itk::MetaDataObjectBase* data);
+
+
+  /**Helper function that converts the time points of a passed time geometry to a time point list
+   and stores it in a itk::MetaDataObject. Use ConvertMetaDataObjectToTimePointList() to convert it back
+   to a time point list.*/
+  MITKCORE_EXPORT itk::MetaDataObjectBase::Pointer ConvertTimePointListToMetaDataObject(const mitk::TimeGeometry* timeGeometry);
 
 } // namespace mitk
 

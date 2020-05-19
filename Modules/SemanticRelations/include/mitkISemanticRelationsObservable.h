@@ -1,25 +1,19 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef MITKISEMANTICRELATIONSOBSERVABLE_H
 #define MITKISEMANTICRELATIONSOBSERVABLE_H
 
 #include "mitkISemanticRelationsObserver.h"
-
-#include "mitkSemanticTypes.h"
 
 namespace mitk
 {
@@ -34,22 +28,22 @@ namespace mitk
     /*
     * @brief Adds the given concrete observer to a container that holds all currently registered observer.
     *
-    * @par observer   The concrete observer to register.
+    * @param observer   The concrete observer to register.
     */
     virtual void AddObserver(ISemanticRelationsObserver* observer) = 0;
     /*
     * @brief Removes the given concrete observer from the container that holds all currently registered observer.
     *
-    * @par observer   The concrete observer to unregister.
+    * @param observer   The concrete observer to unregister.
     */
     virtual void RemoveObserver(ISemanticRelationsObserver* observer) = 0;
     /*
     * @brief Updates all concrete observer in the container that holds all currently registered observer.
     *        The caseID can be used to only update the observer, if the caseID fulfills a certain condition.
     *
-    * @par  caseID    A caseID that identifies the currently active patient / case.
+    * @param  caseID    A caseID that identifies the currently active patient / case.
     */
-    virtual void NotifyObserver(const mitk::SemanticTypes::CaseID& caseID) const = 0;
+    virtual void NotifyObserver(const SemanticTypes::CaseID& caseID) const = 0;
 
   }; // class ISemanticRelationsObservable
 } // namespace mitk

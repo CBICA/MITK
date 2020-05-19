@@ -14,5 +14,14 @@
 		<file>mwLayout.png</file>
 		<file>mwSynchronized.png</file>
 		<file>mwDesynchronized.png</file>
-    </qresource>
+		<file>mwMITK.png</file>
+		<file>mwPACS.png</file>
+		<file>star-solid.svg</file>
+		<file>history-solid.svg</file>
+		<file>tree_inspector.svg</file>
+		<file>list-solid.svg</file>
+		<file>favorite_add.svg</file>
+		<file>favorite_remove.svg</file>
+		<file>hourglass-half-solid.svg</file>
+	</qresource>
 </RCC>

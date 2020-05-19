@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef QMITKSEMANTICRELATIONSVIEW_H
 #define QMITKSEMANTICRELATIONSVIEW_H
@@ -34,7 +30,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 // berry
 #include <berryISelectionListener.h>
 
-// mitk qt
+// mitk qt gui common plugin
 #include <QmitkAbstractView.h>
 
 class QmitkDnDDataNodeWidget;
@@ -54,13 +50,14 @@ public:
 
   static const std::string VIEW_ID;
 
+  void RenderWindowPartActivated(mitk::IRenderWindowPart* renderWindowPart) override;
+  void RenderWindowPartDeactivated(mitk::IRenderWindowPart* renderWindowPart) override;
+  void RenderWindowPartInputChanged(mitk::IRenderWindowPart* renderWindowPart) override;
+
 protected:
 
-  virtual void SetFocus() override;
-  virtual void CreateQtPartControl(QWidget* parent) override;
-
-  virtual void RenderWindowPartActivated(mitk::IRenderWindowPart* renderWindowPart) override;
-  virtual void RenderWindowPartDeactivated(mitk::IRenderWindowPart*) override { }
+  void SetFocus() override;
+  void CreateQtPartControl(QWidget* parent) override;
 
 private Q_SLOTS:
 
@@ -84,17 +81,21 @@ private:
   * QItemSeletionModel is changed, a selection changed event is fired. All plugins (views), that subclass the
   * QmitkAbstractView will be informed about the selection changed via the OnSelectionChanged-function.
   */
-  virtual QItemSelectionModel* GetDataNodeSelectionModel() const override;
+  QItemSelectionModel* GetDataNodeSelectionModel() const override;
 
-  virtual void NodeRemoved(const mitk::DataNode* dataNode) override;
+  void NodeRemoved(const mitk::DataNode* dataNode) override;
 
   void AddToComboBox(const mitk::SemanticTypes::CaseID& caseID);
   void RemoveFromComboBox(const mitk::SemanticTypes::CaseID& caseID);
 
   void OpenInEditor(const mitk::DataNode* dataNode);
-  void JumpToPosition(const mitk::DataNode* dataNode);
+
+  void SetControlledRenderer();
 
   Ui::QmitkSemanticRelationsControls m_Controls;
+
+  mitk::IRenderWindowPart* m_RenderWindowPart;
+
   QmitkLesionInfoWidget* m_LesionInfoWidget;
   QmitkPatientTableInspector* m_PatientTableInspector;
   QmitkDnDDataNodeWidget* m_DnDDataNodeWidget;

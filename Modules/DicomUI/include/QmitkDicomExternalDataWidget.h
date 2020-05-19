@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef QmitkDicomExternalDataWidget_h
 #define QmitkDicomExternalDataWidget_h
@@ -95,6 +91,11 @@ public slots:
 
   void OnSeriesSelectionChanged(const QStringList &s);
 
+protected slots:
+  void OnProgressStep(const QString&);
+
+  void OnProgressDetail(const QString&);
+
 protected:
   /// \brief Get the list of filepath from current selected index in TreeView. All file paths referring to the index
   /// will be returned.
@@ -111,6 +112,7 @@ protected:
 
   QProgressDialog *m_ProgressDialog;
   QString m_LastImportDirectory;
+  QString m_ProgressStep;
 
   Ui::QmitkDicomExternalDataWidgetControls *m_Controls;
 };

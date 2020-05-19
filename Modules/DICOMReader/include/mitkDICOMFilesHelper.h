@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef MITKDICOMFILESHELPER_H
 #define MITKDICOMFILESHELPER_H
@@ -36,6 +32,10 @@ DICOMFilePathList GetDICOMFilesInSameDirectory(const std::string& filePath);
 All DICOM files will be added to the result and returned.
 @remark The helper does no sorting of any kind.*/
 DICOMFilePathList FilterForDICOMFiles(const DICOMFilePathList& fileList);
+
+/** Returns all DICOM files passed with fileList that have the same series instance UID then the passed refFilePath.
+@pre refFilePath must point to a valid DICOM file.*/
+DICOMFilePathList FilterDICOMFilesForSameSeries(const std::string& refFilePath, const DICOMFilePathList& fileList);
 }
 
 #endif // MITKDICOMFILESHELPER_H

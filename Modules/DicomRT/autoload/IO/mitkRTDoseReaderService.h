@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 
 #ifndef mitkRTDoseReaderService_h
@@ -38,16 +34,18 @@ namespace mitk
             ~RTDoseReaderService() override;
 
             using AbstractFileReader::Read;
-            /**
-            * @brief Reads a dicom dataset from a RTDOSE file
-            * The method reads the PixelData from the DicomRT dose file and scales
-            * them with a factor for getting Gray-values instead of pixel-values.
-            * The Gray-values are stored in a mitkImage with a vtkColorTransferFunc.
-            * Relative values are used for coloring the image. The relative values are
-            * relative to a PrescriptionDose defined in the RT-Plan. If there is no
-            * RT-Plan file PrescriptionDose is set to 80% of the maximum dose.
-            */
-            std::vector<itk::SmartPointer<BaseData> > Read() override;
+
+    protected:
+      /**
+      * @brief Reads a dicom dataset from a RTDOSE file
+      * The method reads the PixelData from the DicomRT dose file and scales
+      * them with a factor for getting Gray-values instead of pixel-values.
+      * The Gray-values are stored in a mitkImage with a vtkColorTransferFunc.
+      * Relative values are used for coloring the image. The relative values are
+      * relative to a PrescriptionDose defined in the RT-Plan. If there is no
+      * RT-Plan file PrescriptionDose is set to 80% of the maximum dose.
+      */
+      std::vector<itk::SmartPointer<BaseData>> DoRead() override;
 
     private:
       RTDoseReaderService* Clone() const override;

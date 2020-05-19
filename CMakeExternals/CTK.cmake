@@ -15,30 +15,23 @@ if(MITK_USE_CTK)
 
   if(NOT DEFINED CTK_DIR)
 
-    set(revision_tag 6c0eddaa)
+    set(revision_tag "78341aba")
 
     set(ctk_optional_cache_args )
-    if(MITK_USE_Python)
+    if(MITK_USE_Python3)
       list(APPEND ctk_optional_cache_args
            -DCTK_LIB_Scripting/Python/Widgets:BOOL=ON
            -DCTK_ENABLE_Python_Wrapping:BOOL=OFF
-           -DCTK_APP_ctkSimplePythonShell:BOOL=ON
-           -DPYTHON_EXECUTABLE:FILEPATH=${PYTHON_EXECUTABLE}
-           -DPYTHON_INCLUDE_DIR:PATH=${PYTHON_INCLUDE_DIR}
-           -DPYTHON_INCLUDE_DIR2:PATH=${PYTHON_INCLUDE_DIR2}
-           -DPYTHON_LIBRARY:FILEPATH=${PYTHON_LIBRARY}
+           -DCTK_APP_ctkSimplePythonShell:BOOL=OFF
+           "-DPYTHON_INCLUDE_DIR:PATH=${Python3_INCLUDE_DIRS}"
+           "-DPYTHON_LIBRARY:FILEPATH=${Python3_LIBRARY_RELEASE}"
       )
     else()
       list(APPEND ctk_optional_cache_args
            -DCTK_LIB_Scripting/Python/Widgets:BOOL=OFF
            -DCTK_ENABLE_Python_Wrapping:BOOL=OFF
            -DCTK_APP_ctkSimplePythonShell:BOOL=OFF
-      )
-    endif()
-
-    if(NOT MITK_USE_Python)
-      list(APPEND ctk_optional_cache_args
-        -DDCMTK_CMAKE_DEBUG_POSTFIX:STRING=d
+           -DDCMTK_CMAKE_DEBUG_POSTFIX:STRING=d
       )
     endif()
 
@@ -54,10 +47,12 @@ if(MITK_USE_CTK)
       ENDIF()
     ENDFOREACH()
 
+    mitk_query_custom_ep_vars()
+
     ExternalProject_Add(${proj}
       LIST_SEPARATOR ${sep}
-      URL ${MITK_THIRDPARTY_DOWNLOAD_PREFIX_URL}/CTK_${revision_tag}.tar.gz
-      URL_MD5 c8025c0009d5dd207cd442eadca409b4
+      GIT_REPOSITORY https://github.com/commontk/CTK
+      GIT_TAG ${revision_tag}
       UPDATE_COMMAND ""
       INSTALL_COMMAND ""
       CMAKE_GENERATOR ${gen}
@@ -73,6 +68,7 @@ if(MITK_USE_CTK)
         -DQt5_DIR=${Qt5_DIR}
         -DGit_EXECUTABLE:FILEPATH=${GIT_EXECUTABLE}
         -DGIT_EXECUTABLE:FILEPATH=${GIT_EXECUTABLE}
+        -DCTK_BUILD_QTDESIGNER_PLUGINS:BOOL=ON
         -DCTK_LIB_CommandLineModules/Backend/LocalProcess:BOOL=ON
         -DCTK_LIB_CommandLineModules/Frontend/QtGui:BOOL=ON
         -DCTK_LIB_PluginFramework:BOOL=ON
@@ -82,11 +78,14 @@ if(MITK_USE_CTK)
         -DCTK_PLUGIN_org.commontk.configadmin:BOOL=ON
         -DCTK_USE_GIT_PROTOCOL:BOOL=OFF
         -DDCMTK_DIR:PATH=${DCMTK_DIR}
-        -DPythonQt_URL:STRING=${MITK_THIRDPARTY_DOWNLOAD_PREFIX_URL}/PythonQt_e39be131.tar.gz # From https://github.com/kislinsk/PythonQt.git
+        -DPythonQt_URL:STRING=${MITK_THIRDPARTY_DOWNLOAD_PREFIX_URL}/PythonQt_fae23012.tar.gz
+        ${${proj}_CUSTOM_CMAKE_ARGS}
       CMAKE_CACHE_ARGS
         ${ep_common_cache_args}
+        ${${proj}_CUSTOM_CMAKE_CACHE_ARGS}
       CMAKE_CACHE_DEFAULT_ARGS
         ${ep_common_cache_default_args}
+        ${${proj}_CUSTOM_CMAKE_CACHE_DEFAULT_ARGS}
       DEPENDS ${proj_DEPENDENCIES}
      )
 

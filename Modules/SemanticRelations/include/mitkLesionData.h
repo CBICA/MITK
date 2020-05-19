@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef MITKLESIONDATA_H
 #define MITKLESIONDATA_H
@@ -29,6 +25,12 @@ namespace mitk
 {
   /**
   * @brief This class holds the data of each lesion in the lesion tree view.
+  *        The data is the lesion itself with its UID, name and lesion class
+  *        as well as two vectors for
+  *        - lesion presence: bool value for each control-point
+  *                           inside the semantic relations storage
+  *        - lesion volume: double value for each control-point  - information type pair
+  *                         inside the semantic relations storage
   *
   */
   class MITKSEMANTICRELATIONS_EXPORT LesionData
@@ -38,7 +40,6 @@ namespace mitk
     * @brief sets the data members to their initial values
     */
     LesionData(const SemanticTypes::Lesion& lesion = SemanticTypes::Lesion());
-    ~LesionData();
 
     SemanticTypes::Lesion GetLesion() const { return m_Lesion; };
     SemanticTypes::ID GetLesionUID() const { return m_Lesion.UID; }

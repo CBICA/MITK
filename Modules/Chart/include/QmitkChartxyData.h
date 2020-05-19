@@ -1,18 +1,14 @@
-/*===================================================================
+/*============================================================================
 
 The Medical Imaging Interaction Toolkit (MITK)
 
-Copyright (c) German Cancer Research Center,
-Division of Medical and Biological Informatics.
+Copyright (c) German Cancer Research Center (DKFZ)
 All rights reserved.
 
-This software is distributed WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR
-A PARTICULAR PURPOSE.
+Use of this source code is governed by a 3-clause BSD license that can be
+found in the LICENSE file.
 
-See LICENSE.txt or http://www.mitk.org for details.
-
-===================================================================*/
+============================================================================*/
 
 #ifndef QmitkC3xyData_h
 #define QmitkC3xyData_h
@@ -44,14 +40,15 @@ class QmitkChartxyData : public QObject
   Q_PROPERTY(QVariant m_Color READ GetColor WRITE SetColor NOTIFY SignalColorChanged);
   Q_PROPERTY(QVariant m_Label READ GetLabel WRITE SetLabel NOTIFY SignalLabelChanged);
   Q_PROPERTY(QVariant m_LineStyleName READ GetLineStyle WRITE SetLineStyle NOTIFY SignalLineStyleChanged);
+  Q_PROPERTY(QVariant m_MarkerSymbolName READ GetMarkerSymbol WRITE SetMarkerSymbol NOTIFY SignalMarkerSymbolChanged);
 
 public:
-  explicit QmitkChartxyData(const QMap<QVariant, QVariant> &data,
+  explicit QmitkChartxyData(const std::vector< std::pair<double, double> > &data,
                             const QVariant &label,
                             const QVariant &diagramType,
                             const QVariant &position); // Constructor for Data2D (x:y=1:2, 2:6, 3:7)
 
-  void SetData(const QMap<QVariant, QVariant> &data);
+  void SetData(const std::vector< std::pair<double, double> > &data);
 
   Q_INVOKABLE QVariant GetLabelCount() const { return m_LabelCount; }
 
@@ -121,6 +118,13 @@ public:
     emit SignalColorChanged(color);
   };
 
+  Q_INVOKABLE QVariant GetMarkerSymbol() const { return m_MarkerSymbolName; };
+  Q_INVOKABLE void SetMarkerSymbol(const QVariant &markerSymbol)
+  {
+    m_MarkerSymbolName = markerSymbol;
+    emit SignalMarkerSymbolChanged(markerSymbol);
+  };
+
   Q_INVOKABLE QVariant GetLineStyle() const { return m_LineStyleName; };
   Q_INVOKABLE void SetLineStyle(const QVariant &lineStyle)
   {
@@ -135,6 +139,8 @@ public:
    */
   void ClearData();
 
+  QmitkChartxyData() {}
+
 signals:
   void SignalDataChanged(const QList<QVariant> data);
   void SignalErrorDataChanged(const QList<QVariant> errorData);
@@ -143,6 +149,7 @@ signals:
   void SignalLabelChanged(const QVariant label);
   void SignalPieLabelsChanged(const QList<QVariant> pieLabels);
   void SignalLineStyleChanged(const QVariant lineStyle);
+  void SignalMarkerSymbolChanged(const QVariant lineStyle);
 
 private:
   /** js needs to know which label position in the list QmitkChartWidget::Impl::m_C3xyData it has for updating the values*/
@@ -156,8 +163,9 @@ private:
   QVariant m_Label;
   QList<QVariant> m_PieLabels;
   QVariant m_ChartType;
-  QVariant m_Color = "";
-  QVariant m_LineStyleName = "solid";
+  QVariant m_Color;
+  QVariant m_LineStyleName;
+  QVariant m_MarkerSymbolName;
 };
 
 #endif // QmitkC3xyData_h
